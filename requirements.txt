@@ -1,0 +1,12 @@
+black
+datasets
+einops
+gensim
+matplotlib
+nltk
+numpy
+pandas
+scikit-learn
+seaborn
+torch
+tqdm
