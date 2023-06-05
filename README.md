@@ -1,9 +1,9 @@
 # Learning Transformer Programs
 
-This repository contains the code for our paper, Learning Transformer Programs.
+This repository contains the code for our paper, [Learning Transformer Programs](https://arxiv.org/abs/2306.01128).
 The code can be used to train a modified Transformer to solve a task, and then convert it into a human-readable Python program.
 The repository also includes a number of [example programs](#Example-programs), which we learned for the tasks described in the paper.
-Please see our paper for more details.
+Please see [our paper](https://arxiv.org/abs/2306.01128) for more details.
 
 <img src="figures/methodology.png" width="100%" height="auto"/>
 
