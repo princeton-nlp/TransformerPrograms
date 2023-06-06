@@ -85,7 +85,7 @@ python src/run.py \
      --output_dir "output/conll";
 ```
 Please see [src/run.py](src/run.py) for all of the possible arguments.
-The training data will either be generated (for the RASP tasks) or downloaded from [HuggingFace Datasets](https://huggingface.co/datasets); see [src/utils/data_utils.py](src/utils/data_utils.py) for the supported datasets.
+The training data will either be generated (for the RASP tasks) or downloaded from [Hugging Face Datasets](https://huggingface.co/datasets); see [src/utils/data_utils.py](src/utils/data_utils.py) for the supported datasets.
 The [scripts](scripts/) directory contains scripts for training Transformer Programs and standard Transformers with the experiment settings used in the paper.
 
 ### Converting to code
