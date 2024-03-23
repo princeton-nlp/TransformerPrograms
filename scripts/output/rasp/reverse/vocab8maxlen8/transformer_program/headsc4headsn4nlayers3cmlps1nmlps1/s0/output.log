@@ -1,0 +1,13 @@
+I 2024-03-22T20:15:09 __main__:655: args: {'output_dir': 'output/rasp/reverse/vocab8maxlen8/transformer_program/headsc4headsn4nlayers3cmlps1nmlps1/s0', 'dataset': 'reverse', 'vocab_size': 8, 'dataset_size': 20000, 'min_length': 1, 'max_length': 8, 'seed': 0, 'do_lower': 0, 'unique': 1, 'replace_numbers': 0, 'n_vars_cat': 1, 'n_vars_num': 1, 'd_var': 8, 'n_heads_cat': 4, 'n_heads_num': 4, 'd_mlp': 64, 'n_cat_mlps': 1, 'n_num_mlps': 1, 'mlp_vars_in': 2, 'n_layers': 3, 'sample_fn': 'gumbel_soft', 'one_hot_embed': True, 'count_only': True, 'selector_width': 0, 'attention_type': 'cat', 'rel_pos_bias': 'fixed', 'mlp_type': 'cat', 'autoregressive': False, 'glove_embeddings': 'data/glove.840B.300d.txt', 'do_glove': 0, 'unembed_mask': 1, 'pool_outputs': 0, 'standard': False, 'd_model': 64, 'd_head': None, 'n_heads': 2, 'dropout': 0.0, 'lr': 0.05, 'max_grad_norm': None, 'gumbel_samples': 1, 'n_epochs': 250, 'batch_size': 512, 'tau_init': 3.0, 'tau_end': 0.01, 'tau_schedule': 'geomspace', 'loss_agg': 'per_token', 'save': True, 'save_code': True, 'device': 'cpu'}
+I 2024-03-22T20:15:12 __main__:623: vocab size: 8
+I 2024-03-22T20:15:12 __main__:624: X_train: (11439, 8), Y_train, (11439, 8)
+I 2024-03-22T20:15:12 __main__:625: X_val: (1272, 8), Y_val, (1272, 8)
+I 2024-03-22T20:15:12 __main__:626: X_test: (1413, 8), Y_test, (1413, 8)
+I 2024-03-22T20:15:12 __main__:629: 11439/11439 unique training inputs
+I 2024-03-22T20:15:12 __main__:630: 1413/1413 unique test inputs not in train
+I 2024-03-22T20:32:25 __main__:452: train: loss=0.10073459893465042, acc=0.9793045845449483, metrics={}
+I 2024-03-22T20:32:25 __main__:452: val: loss=0.10403338074684143, acc=0.9814532871972318, metrics={}
+I 2024-03-22T20:32:25 __main__:452: test: loss=0.1081228107213974, acc=0.9786436867740727, metrics={}
+I 2024-03-22T20:32:25 __main__:469: saving model to output/rasp/reverse/vocab8maxlen8/transformer_program/headsc4headsn4nlayers3cmlps1nmlps1/s0/model.pt
+I 2024-03-22T20:32:25 __main__:473: saving code to output/rasp/reverse/vocab8maxlen8/transformer_program/headsc4headsn4nlayers3cmlps1nmlps1/s0
+I 2024-03-22T20:32:26 __main__:649: writing results to output/rasp/reverse/vocab8maxlen8/transformer_program/headsc4headsn4nlayers3cmlps1nmlps1/s0/results.csv

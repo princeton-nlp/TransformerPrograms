@@ -1,15 +1,17 @@
 #!/bin/bash 
 
+DATASET="double_hist"
 VOCAB_SIZE=8
 MAX_LENGTH=8
 N_LAYERS=3
-N_HEADS_CAT=4
-N_HEADS_NUM=4
-N_CAT_MLPS=2
-N_NUM_MLPS=2
+N_HEADS_CAT=2
+N_HEADS_NUM=2
+N_CAT_MLPS=1
+N_NUM_MLPS=1
 SEED=0
 
-python src/run.py \
+
+python ../src/run.py \
      --dataset "${DATASET}" \
      --vocab_size "${VOCAB_SIZE}" \
      --dataset_size 20000 \
@@ -29,8 +31,8 @@ python src/run.py \
      --n_layers "${N_LAYERS}" \
      --n_heads_cat "${N_HEADS_CAT}" \
      --n_heads_num "${N_HEADS_NUM}" \
-     --n_cat_mlps "${N_MLPS}" \
-     --n_num_mlps "${N_NUM_CAT_MLPS}" \
+     --n_cat_mlps "${N_CAT_MLPS}" \
+     --n_num_mlps "${N_NUM_MLPS}" \
      --attention_type "cat" \
      --rel_pos_bias "fixed" \
      --one_hot_embed \
@@ -43,4 +45,5 @@ python src/run.py \
      --unique 1 \
      --save \
      --save_code \
-     --output_dir "output/rasp/${DATASET}/vocab${VOCAB_SIZE}maxlen${MAX_LENGTH}/transformer_program/headsc${N_HEADS_CAT}headsn${N_HEADS_NUM}nlayers${N_LAYERS}cmlps${N_MLPS}nmlps${N_NUM_CAT_MLPS}/s${SEED}";
+     --device "cpu" \
+     --output_dir "output/rasp/${DATASET}/vocab${VOCAB_SIZE}maxlen${MAX_LENGTH}/transformer_program/headsc${N_HEADS_CAT}headsn${N_HEADS_NUM}nlayers${N_LAYERS}cmlps${N_CAT_MLPS}nmlps${N_NUM_MLPS}/s${SEED}";

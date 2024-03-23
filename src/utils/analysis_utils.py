@@ -15,7 +15,7 @@ from torch.nn import functional as F
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 
-from src.utils.code_utils import (
+from utils.code_utils import (
     cat_head_to_code,
     num_head_to_code,
     cat_mlp_to_code,

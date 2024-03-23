@@ -6,3 +6,6 @@ Gemfile.lock
 .jekyll-cache
 *~
 *__pycache__*
+.vscode
+data
+```

@@ -18,10 +18,10 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from src.models.programs import TransformerProgramModel, argmax
+from models.programs import TransformerProgramModel, argmax
 
-from src.run import set_seed, get_sample_fn
-from src.utils import code_utils, data_utils, logging
+from run import set_seed, get_sample_fn
+from utils import code_utils, data_utils, logging
 
 
 logger = logging.get_logger(__name__)

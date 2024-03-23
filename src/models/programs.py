@@ -10,7 +10,7 @@ from torch.nn import functional as F
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 
-from src.utils import logging
+from utils import logging
 
 logger = logging.get_logger(__name__)
 

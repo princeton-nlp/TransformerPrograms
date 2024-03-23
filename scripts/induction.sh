@@ -7,7 +7,7 @@ SEED=6
 
 echo "SEED=${SEED}";
 
-python src/run.py \
+python ../src/run.py \
      --dataset "induction" \
      --vocab_size "${VOCAB_SIZE}" \
      --dataset_size 20000 \

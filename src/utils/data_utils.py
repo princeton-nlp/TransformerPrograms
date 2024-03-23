@@ -20,7 +20,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from src.utils import logging
+from utils import logging
 
 logger = logging.get_logger(__name__)
 
