@@ -1,19 +1,19 @@
 import argparse
-import copy
-from copy import deepcopy
-from functools import partial
-import itertools
+# import copy
+# from copy import deepcopy
+# from functools import partial
+# import itertools
 import json
-import math
+# import math
 from pathlib import Path
 import random
 
-import einops
+# import einops
 import numpy as np
 import pandas as pd
 import torch
-from torch import nn
-from torch.nn import functional as F
+# from torch import nn
+# from torch.nn import functional as F
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -28,76 +28,75 @@ from models.programs import (
 )
 from utils import code_utils, data_utils, logging, metric_utils
 
-logger = logging.get_logger(__name__)
-
+logger = logging.get_logger(__name__) # Initialize logger with custom handler
 
 def parse_args():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser() # Initialize argument parser
 
     # Output
-    parser.add_argument("--output_dir", type=str, default="output/scratch")
+    parser.add_argument("--output_dir", type=str, default="output/scratch") # Output directory
 
-    # Data
-    parser.add_argument("--dataset", type=str, default="reverse")
-    parser.add_argument("--vocab_size", type=int, default=8)
-    parser.add_argument("--dataset_size", type=int, default=-1)
-    parser.add_argument("--min_length", type=int, default=1)
-    parser.add_argument("--max_length", type=int, default=8)
-    parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--do_lower", type=int, default=0)
-    parser.add_argument("--unique", type=int, default=1)
-    parser.add_argument("--replace_numbers", type=int, default=0)
+    # Data 
+    parser.add_argument("--dataset", type=str, default="reverse")           # Dataset name (reverse, hist, double_hist, sort, most_freq, dyck1 & dyck2)
+    parser.add_argument("--vocab_size", type=int, default=8)                # Vocabulary size (8, or 16 for dyck1 & dyck2)
+    parser.add_argument("--dataset_size", type=int, default=-1)             # dataset size (20.000)
+    parser.add_argument("--min_length", type=int, default=1)                # Minimum length of the vocabulary (default: 1)
+    parser.add_argument("--max_length", type=int, default=8)                # Maximum length of the vocabulary (8, or 16 for dyck1 & dyck2)
+    parser.add_argument("--seed", type=int, default=0)                      # Seed for random number generator (five random seeds)
+    parser.add_argument("--do_lower", type=int, default=0)                  # Lowercase the dataset (default: 0)
+    parser.add_argument("--unique", type=int, default=1)                    # Unique dataset (default: 1)
+    parser.add_argument("--replace_numbers", type=int, default=0)           # Replace numbers with <num> (default: 0)
 
     # Model
-    parser.add_argument("--n_vars_cat", type=int, default=1)
-    parser.add_argument("--n_vars_num", type=int, default=1)
-    parser.add_argument("--d_var", type=int, default=None)
-    parser.add_argument("--n_heads_cat", type=int, default=2)
-    parser.add_argument("--n_heads_num", type=int, default=2)
-    parser.add_argument("--d_mlp", type=int, default=64)
-    parser.add_argument("--n_cat_mlps", type=int, default=1)
-    parser.add_argument("--n_num_mlps", type=int, default=1)
-    parser.add_argument("--mlp_vars_in", type=int, default=2)
-    parser.add_argument("--n_layers", type=int, default=1)
-    parser.add_argument("--sample_fn", type=str, default="gumbel_soft")
-    parser.add_argument("--one_hot_embed", action="store_true")
-    parser.add_argument("--count_only", action="store_true")
-    parser.add_argument("--selector_width", type=int, default=0)
-    parser.add_argument("--attention_type", type=str, default="cat")
-    parser.add_argument("--rel_pos_bias", type=str, default="fixed")
-    parser.add_argument("--mlp_type", type=str, default="cat")
-    parser.add_argument("--autoregressive", action="store_true")
+    parser.add_argument("--n_vars_cat", type=int, default=1)                # Number of categorical variables (default: 1)
+    parser.add_argument("--n_vars_num", type=int, default=1)                # Number of numerical variables (default: 1)
+    parser.add_argument("--d_var", type=int, default=None)                  # Dimension of the variable (max_length)
+    parser.add_argument("--n_heads_cat", type=int, default=2)               # Number of categorical heads (2 for hist, double_hist & dyck2, or 4 for reverse, sort, most_freq & dyck1)
+    parser.add_argument("--n_heads_num", type=int, default=2)               # Number of numerical heads (2 for hist, double_hist & dyck2, or 4 for reverse, sort, most_freq & dyck1)
+    parser.add_argument("--d_mlp", type=int, default=64)                    # Dimension of the MLP (default: 64)
+    parser.add_argument("--n_cat_mlps", type=int, default=1)                # Number of categorical MLPs (1 for reverse, hist, double_hist & dyck1, or 2 for sort, most_freq & dyck2)
+    parser.add_argument("--n_num_mlps", type=int, default=1)                # Number of numerical MLPs (1 for reverse, hist, double_hist & dyck1, or 2 for sort, most_freq & dyck2)
+    parser.add_argument("--mlp_vars_in", type=int, default=2)               # MLP variables input (default: 2)
+    parser.add_argument("--n_layers", type=int, default=1)                  # Number of layers (3, or 1 for hist)
+    parser.add_argument("--sample_fn", type=str, default="gumbel_soft")     # Sampling function (default: gumbel_soft)
+    parser.add_argument("--one_hot_embed", action="store_true")             # One hot embedding (default: True)
+    parser.add_argument("--count_only", action="store_true")                # Count only (default: True)
+    parser.add_argument("--selector_width", type=int, default=0)            # Selector width (default: 0)
+    parser.add_argument("--attention_type", type=str, default="cat")        # Attention type (default: cat)
+    parser.add_argument("--rel_pos_bias", type=str, default="fixed")        # Relative positional bias (default: fixed)
+    parser.add_argument("--mlp_type", type=str, default="cat")              # MLP type (default: cat)
+    parser.add_argument("--autoregressive", action="store_true")            # Autoregressive (default: True)
 
-    parser.add_argument(
+    parser.add_argument(                                                    # Glove embeddings (data/glove.840B.300d.txt)
         "--glove_embeddings", type=str, default="data/glove.840B.300d.txt"
     )
-    parser.add_argument("--do_glove", type=int, default=0)
+    parser.add_argument("--do_glove", type=int, default=0)                  # Do glove (default: 0)
 
-    parser.add_argument("--unembed_mask", type=int, default=1)
-    parser.add_argument("--pool_outputs", type=int, default=0)
+    parser.add_argument("--unembed_mask", type=int, default=1)              # Unembed mask (default: 1)
+    parser.add_argument("--pool_outputs", type=int, default=0)              # Pool outputs (default: 0)
 
     # Standard model
-    parser.add_argument("--standard", action="store_true")
-    parser.add_argument("--d_model", type=int, default=64)
-    parser.add_argument("--d_head", type=int, default=None)
-    parser.add_argument("--n_heads", type=int, default=2)
-    parser.add_argument("--dropout", type=float, default=0.0)
+    parser.add_argument("--standard", action="store_true")                  # Standard model (default: True)
+    parser.add_argument("--d_model", type=int, default=64)                  # Dimension of the model (default: 64)
+    parser.add_argument("--d_head", type=int, default=None)                 # Dimension of the heads (default: None)
+    parser.add_argument("--n_heads", type=int, default=2)                   # Number of heads (default: 2)
+    parser.add_argument("--dropout", type=float, default=0.0)               # Dropout rate (default: 0.0)
 
     # Training
-    parser.add_argument("--lr", type=float, default=5e-2)
-    parser.add_argument("--max_grad_norm", type=float, default=None)
-    parser.add_argument("--gumbel_samples", type=int, default=1)
-    parser.add_argument("--n_epochs", type=int, default=250)
-    parser.add_argument("--batch_size", type=int, default=512)
-    parser.add_argument("--tau_init", type=float, default=3.0)
-    parser.add_argument("--tau_end", type=float, default=0.01)
-    parser.add_argument("--tau_schedule", type=str, default="geomspace")
-    parser.add_argument("--loss_agg", type=str, default="per_token")
+    parser.add_argument("--lr", type=float, default=5e-2)                   # Learning rate (default: 5e-2)
+    parser.add_argument("--max_grad_norm", type=float, default=None)        # Maximum gradient norm (default: None)
+    parser.add_argument("--gumbel_samples", type=int, default=1)            # Gumbel samples (default: 1)
+    parser.add_argument("--n_epochs", type=int, default=250)                # Number of epochs (default: 250)
+    parser.add_argument("--batch_size", type=int, default=512)              # Batch size (default: 512)
+    parser.add_argument("--tau_init", type=float, default=3.0)              # Gumbel temperature initialization (default: 3.0)
+    parser.add_argument("--tau_end", type=float, default=0.01)              # Gumbel temperature end (default: 0.01)
+    parser.add_argument("--tau_schedule", type=str, default="geomspace")    # Gumbel temperature schedule (default: geomspace)
+    parser.add_argument("--loss_agg", type=str, default="per_token")        # Loss aggregation (default: per_token)
 
-    parser.add_argument("--save", action="store_true")
-    parser.add_argument("--save_code", action="store_true")
+    parser.add_argument("--save", action="store_true")                      # Save model (default: True)
+    parser.add_argument("--save_code", action="store_true")                 # Save code (default: True)
 
-    parser.add_argument("--device", type=str, default="cuda")
+    parser.add_argument("--device", type=str, default="cuda")               # Device (cuda, cpu, mps)
 
     args = parser.parse_args()
 
@@ -108,13 +107,11 @@ def parse_args():
         args.autoregressive = True
         args.vocab_size = 2
 
-    logging.initialize(args.output_dir)
+    logging.initialize(args.output_dir) # Log arguments to the output directory
 
     if args.standard and args.d_head is None:
         args.d_head = int(args.d_model // args.n_heads)
-        logger.info(
-            f"setting d_head to {args.d_model} // {args.n_heads} = {args.d_head}"
-        )
+        logger.info(f"setting d_head to {args.d_model} // {args.n_heads} = {args.d_head}")
 
     return args
 
@@ -593,7 +590,8 @@ def run_standard(
 
 
 def run(args):
-    set_seed(args.seed)
+    set_seed(args.seed) # Set seed - Line 111
+
     (
         train,
         test,
@@ -619,7 +617,9 @@ def run(args):
         replace_numbers=args.replace_numbers,
         get_val=True,
         unique=args.unique,
-    )
+    ) # Get dataset - data_utils, line 564
+
+    # Log dataset information
     logger.info(f"vocab size: {len(idx_w)}")
     logger.info(f"X_train: {X_train.shape}, Y_train, {Y_train.shape}")
     logger.info(f"X_val: {X_val.shape}, Y_val, {Y_val.shape}")
@@ -629,7 +629,7 @@ def run(args):
     logger.info(f"{len(a)}/{len(train)} unique training inputs")
     logger.info(f"{len(b - a)}/{len(test)} unique test inputs not in train")
 
-    f = run_standard if args.standard else run_program
+    f = run_standard if args.standard else run_program # Run standard (line 485) or custom model (line 339)
     results = f(
         args,
         train=train,
@@ -646,13 +646,13 @@ def run(args):
         Y_val=Y_val,
     )
     fn = Path(args.output_dir) / "results.csv"
-    logger.info(f"writing results to {fn}")
-    results.to_csv(fn, index=False)
+    logger.info(f"writing results to {fn}")     # Log location of results
+    results.to_csv(fn, index=False)             # Write results to csv file
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    logger.info(f"args: {vars(args)}")
+    args = parse_args()                 # Parse arguments - Line 25
+    logger.info(f"args: {vars(args)}")  # Log arguments
     with open(Path(args.output_dir) / "args.json", "w") as f:
-        json.dump(vars(args), f)
-    run(args)
+        json.dump(vars(args), f)        # Write variables in arg.json file
+    run(args)                           # Run the model - Line 584
