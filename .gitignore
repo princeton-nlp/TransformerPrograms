@@ -8,5 +8,6 @@ Gemfile.lock
 *__pycache__*
 .vscode
 data
+.DS_Store
 */output/
 ```
