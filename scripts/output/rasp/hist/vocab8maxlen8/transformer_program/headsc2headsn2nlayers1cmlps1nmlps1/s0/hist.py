@@ -62,7 +62,7 @@ def run(tokens):
     def predicate_0_1(q_token, k_token):
         if q_token in {"0"}:
             return k_token == "0"
-        elif q_token in {"2", "1", "<s>"}:
+        elif q_token in {"1", "<s>", "2"}:
             return k_token == "<s>"
         elif q_token in {"3"}:
             return k_token == "3"
@@ -79,7 +79,7 @@ def run(tokens):
 
     # num_attn_0_0 ####################################################
     def num_predicate_0_0(q_token, k_token):
-        if q_token in {"5", "0", "1"}:
+        if q_token in {"1", "5", "0"}:
             return k_token == "4"
         elif q_token in {"2"}:
             return k_token == "5"
@@ -102,9 +102,9 @@ def run(tokens):
             return k_token == "1"
         elif q_token in {"1"}:
             return k_token == "5"
-        elif q_token in {"2", "5"}:
+        elif q_token in {"5", "2"}:
             return k_token == "3"
-        elif q_token in {"3", "4"}:
+        elif q_token in {"4", "3"}:
             return k_token == "0"
         elif q_token in {"<s>"}:
             return k_token == "<s>"

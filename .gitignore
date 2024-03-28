@@ -8,4 +8,5 @@ Gemfile.lock
 *__pycache__*
 .vscode
 data
+*/output/
 ```
