@@ -1,15 +1,15 @@
 #!/bin/bash 
 
-DATASET="double_hist"
+DATASET="reverse"
 VOCAB_SIZE=8
 MAX_LENGTH=8
 N_LAYERS=3
-N_HEADS_CAT=2
-N_HEADS_NUM=2
+N_HEADS_CAT=4
+N_HEADS_NUM=4
 N_CAT_MLPS=1
 N_NUM_MLPS=1
-SEED=0
 
+SEED=0
 
 python ../src/run.py \
      --dataset "${DATASET}" \

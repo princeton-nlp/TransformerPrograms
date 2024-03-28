@@ -1,19 +1,19 @@
 import argparse
-import copy
-from copy import deepcopy
-from functools import partial
-import itertools
+# import copy
+# from copy import deepcopy
+# from functools import partial
+# import itertools
 import json
-import math
+# import math
 from pathlib import Path
 import random
 
-import einops
+# import einops
 import numpy as np
 import pandas as pd
 import torch
-from torch import nn
-from torch.nn import functional as F
+# from torch import nn
+# from torch.nn import functional as F
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -28,76 +28,75 @@ from models.programs import (
 )
 from utils import code_utils, data_utils, logging, metric_utils
 
-logger = logging.get_logger(__name__)
-
+logger = logging.get_logger(__name__) # Initialize logger with custom handler
 
 def parse_args():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser() # Initialize argument parser
 
     # Output
-    parser.add_argument("--output_dir", type=str, default="output/scratch")
+    parser.add_argument("--output_dir", type=str, default="output/scratch") # Output directory
 
-    # Data
-    parser.add_argument("--dataset", type=str, default="reverse")
-    parser.add_argument("--vocab_size", type=int, default=8)
-    parser.add_argument("--dataset_size", type=int, default=-1)
-    parser.add_argument("--min_length", type=int, default=1)
-    parser.add_argument("--max_length", type=int, default=8)
-    parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--do_lower", type=int, default=0)
-    parser.add_argument("--unique", type=int, default=1)
-    parser.add_argument("--replace_numbers", type=int, default=0)
+    # Data 
+    parser.add_argument("--dataset", type=str, default="reverse")           # Dataset name (reverse, hist, double_hist, sort, most_freq, dyck1 & dyck2)
+    parser.add_argument("--vocab_size", type=int, default=8)                # Vocabulary size (8, or 16 for dyck1 & dyck2)
+    parser.add_argument("--dataset_size", type=int, default=-1)             # dataset size (20.000)
+    parser.add_argument("--min_length", type=int, default=1)                # Minimum length of the vocabulary (default: 1)
+    parser.add_argument("--max_length", type=int, default=8)                # Maximum length of the vocabulary (8, or 16 for dyck1 & dyck2)
+    parser.add_argument("--seed", type=int, default=0)                      # Seed for random number generator (five random seeds)
+    parser.add_argument("--do_lower", type=int, default=0)                  # Lowercase the dataset (default: 0)
+    parser.add_argument("--unique", type=int, default=1)                    # Unique dataset (default: 1)
+    parser.add_argument("--replace_numbers", type=int, default=0)           # Replace numbers with <num> (default: 0)
 
     # Model
-    parser.add_argument("--n_vars_cat", type=int, default=1)
-    parser.add_argument("--n_vars_num", type=int, default=1)
-    parser.add_argument("--d_var", type=int, default=None)
-    parser.add_argument("--n_heads_cat", type=int, default=2)
-    parser.add_argument("--n_heads_num", type=int, default=2)
-    parser.add_argument("--d_mlp", type=int, default=64)
-    parser.add_argument("--n_cat_mlps", type=int, default=1)
-    parser.add_argument("--n_num_mlps", type=int, default=1)
-    parser.add_argument("--mlp_vars_in", type=int, default=2)
-    parser.add_argument("--n_layers", type=int, default=1)
-    parser.add_argument("--sample_fn", type=str, default="gumbel_soft")
-    parser.add_argument("--one_hot_embed", action="store_true")
-    parser.add_argument("--count_only", action="store_true")
-    parser.add_argument("--selector_width", type=int, default=0)
-    parser.add_argument("--attention_type", type=str, default="cat")
-    parser.add_argument("--rel_pos_bias", type=str, default="fixed")
-    parser.add_argument("--mlp_type", type=str, default="cat")
-    parser.add_argument("--autoregressive", action="store_true")
+    parser.add_argument("--n_vars_cat", type=int, default=1)                # Number of categorical variables (default: 1)
+    parser.add_argument("--n_vars_num", type=int, default=1)                # Number of numerical variables (default: 1)
+    parser.add_argument("--d_var", type=int, default=None)                  # Dimension of the variable (max_length)
+    parser.add_argument("--n_heads_cat", type=int, default=2)               # Number of categorical heads (2 for hist, double_hist & dyck2, or 4 for reverse, sort, most_freq & dyck1)
+    parser.add_argument("--n_heads_num", type=int, default=2)               # Number of numerical heads (2 for hist, double_hist & dyck2, or 4 for reverse, sort, most_freq & dyck1)
+    parser.add_argument("--d_mlp", type=int, default=64)                    # Dimension of the MLP (default: 64)
+    parser.add_argument("--n_cat_mlps", type=int, default=1)                # Number of categorical MLPs (1 for reverse, hist, double_hist & dyck1, or 2 for sort, most_freq & dyck2)
+    parser.add_argument("--n_num_mlps", type=int, default=1)                # Number of numerical MLPs (1 for reverse, hist, double_hist & dyck1, or 2 for sort, most_freq & dyck2)
+    parser.add_argument("--mlp_vars_in", type=int, default=2)               # MLP variables input (default: 2)
+    parser.add_argument("--n_layers", type=int, default=1)                  # Number of layers (3, or 1 for hist)
+    parser.add_argument("--sample_fn", type=str, default="gumbel_soft")     # Sampling function (default: gumbel_soft)
+    parser.add_argument("--one_hot_embed", action="store_true")             # One hot embedding (default: True)
+    parser.add_argument("--count_only", action="store_true")                # Count only (default: True)
+    parser.add_argument("--selector_width", type=int, default=0)            # Selector width (default: 0)
+    parser.add_argument("--attention_type", type=str, default="cat")        # Attention type (default: cat)
+    parser.add_argument("--rel_pos_bias", type=str, default="fixed")        # Relative positional bias (default: fixed)
+    parser.add_argument("--mlp_type", type=str, default="cat")              # MLP type (default: cat)
+    parser.add_argument("--autoregressive", action="store_true")            # Autoregressive (default: True)
 
-    parser.add_argument(
+    parser.add_argument(                                                    # Glove embeddings (data/glove.840B.300d.txt)
         "--glove_embeddings", type=str, default="data/glove.840B.300d.txt"
     )
-    parser.add_argument("--do_glove", type=int, default=0)
+    parser.add_argument("--do_glove", type=int, default=0)                  # Do glove (default: 0)
 
-    parser.add_argument("--unembed_mask", type=int, default=1)
-    parser.add_argument("--pool_outputs", type=int, default=0)
+    parser.add_argument("--unembed_mask", type=int, default=1)              # Unembed mask (default: 1)
+    parser.add_argument("--pool_outputs", type=int, default=0)              # Pool outputs (default: 0)
 
     # Standard model
-    parser.add_argument("--standard", action="store_true")
-    parser.add_argument("--d_model", type=int, default=64)
-    parser.add_argument("--d_head", type=int, default=None)
-    parser.add_argument("--n_heads", type=int, default=2)
-    parser.add_argument("--dropout", type=float, default=0.0)
+    parser.add_argument("--standard", action="store_true")                  # Standard model (default: True)
+    parser.add_argument("--d_model", type=int, default=64)                  # Dimension of the model (default: 64)
+    parser.add_argument("--d_head", type=int, default=None)                 # Dimension of the heads (default: None)
+    parser.add_argument("--n_heads", type=int, default=2)                   # Number of heads (default: 2)
+    parser.add_argument("--dropout", type=float, default=0.0)               # Dropout rate (default: 0.0)
 
     # Training
-    parser.add_argument("--lr", type=float, default=5e-2)
-    parser.add_argument("--max_grad_norm", type=float, default=None)
-    parser.add_argument("--gumbel_samples", type=int, default=1)
-    parser.add_argument("--n_epochs", type=int, default=250)
-    parser.add_argument("--batch_size", type=int, default=512)
-    parser.add_argument("--tau_init", type=float, default=3.0)
-    parser.add_argument("--tau_end", type=float, default=0.01)
-    parser.add_argument("--tau_schedule", type=str, default="geomspace")
-    parser.add_argument("--loss_agg", type=str, default="per_token")
+    parser.add_argument("--lr", type=float, default=5e-2)                   # Learning rate (default: 5e-2)
+    parser.add_argument("--max_grad_norm", type=float, default=None)        # Maximum gradient norm (default: None)
+    parser.add_argument("--gumbel_samples", type=int, default=1)            # Gumbel samples (default: 1)
+    parser.add_argument("--n_epochs", type=int, default=250)                # Number of epochs (default: 250)
+    parser.add_argument("--batch_size", type=int, default=512)              # Batch size (default: 512)
+    parser.add_argument("--tau_init", type=float, default=3.0)              # Gumbel temperature initialization (default: 3.0)
+    parser.add_argument("--tau_end", type=float, default=0.01)              # Gumbel temperature end (default: 0.01)
+    parser.add_argument("--tau_schedule", type=str, default="geomspace")    # Gumbel temperature schedule (default: geomspace)
+    parser.add_argument("--loss_agg", type=str, default="per_token")        # Loss aggregation (default: per_token)
 
-    parser.add_argument("--save", action="store_true")
-    parser.add_argument("--save_code", action="store_true")
+    parser.add_argument("--save", action="store_true")                      # Save model (default: True)
+    parser.add_argument("--save_code", action="store_true")                 # Save code (default: True)
 
-    parser.add_argument("--device", type=str, default="cuda")
+    parser.add_argument("--device", type=str, default="cuda")               # Device (cuda, cpu, mps)
 
     args = parser.parse_args()
 
@@ -108,13 +107,11 @@ def parse_args():
         args.autoregressive = True
         args.vocab_size = 2
 
-    logging.initialize(args.output_dir)
+    logging.initialize(args.output_dir) # Log arguments to the output directory
 
     if args.standard and args.d_head is None:
         args.d_head = int(args.d_model // args.n_heads)
-        logger.info(
-            f"setting d_head to {args.d_model} // {args.n_heads} = {args.d_head}"
-        )
+        logger.info(f"setting d_head to {args.d_model} // {args.n_heads} = {args.d_head}")
 
     return args
 
@@ -156,84 +153,81 @@ def run_training(
     )
     out = []
     metrics = []
-    t = tqdm(range(n_epochs), total=n_epochs)
-    if temps is None:
+    t = tqdm(range(n_epochs), total=n_epochs) # Initialze tqdm - progress bar library
+    if temps is None: # temps = None -> True
         temps = [None] * n_epochs
-    if eval_splits is None and X_test is not None:
+    if eval_splits is None and X_test is not None: # eval_splits = [("val", X_val, Y_val), ("test", X_test, Y_test)] (parameter) and X_test = None () -> False
         eval_splits = [("val", X_test, Y_test)]
     for epoch in t:
         temp = temps[epoch]
         model.train()
-        if temp is not None and smooth_temps and epoch + 1 < len(temps):
+        if temp is not None and smooth_temps and epoch + 1 < len(temps): # temp = temps[epoch] = temps[0, 1, ..., n] = None (line 158), smooth_temps = True (default) -> False
             ttemps = np.geomspace(temp, temps[epoch + 1], len(train_dataloader))
-        elif temp is not None:
+        elif temp is not None: # emp = temps[epoch] = temps[0, 1, ..., n] = None (line 158) -> False
             ttemps = [temp] * len(train_dataloader)
-        else:
+        else: # True
             ttemps = [None] * len(train_dataloader)
         epoch_losses = []
         for ttemp, (x, y) in zip(ttemps, train_dataloader):
-            if ttemp is not None:
+            if ttemp is not None: # ttemp = None (line 170) -> False
                 model.set_temp(ttemp)
-            x = x.to(model.device)
-            m = (x != x_pad_idx).float()
-            mask = (m.unsqueeze(-1) @ m.unsqueeze(-2)).bool()
-            if autoregressive:
-                mask = torch.tril(mask)
+            x = x.to(model.device) # Define x as a tensor on the device (cuda, cpu, mps)
+            m = (x != x_pad_idx).float() # Define mask m typically used to mask the padding tokens
+            mask = (m.unsqueeze(-1) @ m.unsqueeze(-2)).bool() # Define 2D mask from 1D mask (mask[i, j] is True if both x[i] and x[j] are not padding elements and False otherwise)
+            if autoregressive: # autoregressive = True (default) -> True
+                mask = torch.tril(mask) # Lower triangular part of the matrix
             lst = []
             losses_lst = []
-            tgts = y.to(model.device)
-            for _ in range(n_samples):
+            tgts = y.to(model.device) # Define tgts as a tensor on the device (cuda, cpu, mps)
+            for _ in range(n_samples): # n_samples = 1 (default)
                 logits = model(x, mask=mask)
-                if loss_agg == "per_seq":
+                if loss_agg == "per_seq": # loss_agg = "per_token" (default) -> False
                     log_probs = logits.log_softmax(-1)
                     losses = -log_probs.gather(2, tgts.unsqueeze(-1))
                     losses = losses.masked_fill(
                         (tgts == y_pad_idx).unsqueeze(-1), 0.0
                     ).sum(-1)
-                else:
-                    log_probs = logits.log_softmax(-1)
-                    all_losses = -log_probs.gather(
-                        2, tgts.unsqueeze(-1)
-                    ).squeeze(-1)
-                    masked_losses = all_losses.masked_fill(
-                        (tgts == y_pad_idx), 0.0
-                    )
-                    lengths = (tgts != y_pad_idx).sum(-1)
-                    losses = masked_losses.sum(-1) / lengths
-                loss = losses.mean()
-                if reg_alpha:
+                else: # True
+                    log_probs = logits.log_softmax(-1) # Log softmax of the logits to get the logits into probabilities and the log function is applied for numerical stability
+                    all_losses = -log_probs.gather(2, tgts.unsqueeze(-1)).squeeze(-1) # Calculate the negative log likelihood of the target tokens
+                    masked_losses = all_losses.masked_fill((tgts == y_pad_idx), 0.0) # Mask the losses to ignore the padding tokens
+                    lengths = (tgts != y_pad_idx).sum(-1) # Calculate the length of the target tokens by counting the non-padding tokens
+                    losses = masked_losses.sum(-1) / lengths # Calculate the average loss per sequence
+                loss = losses.mean() # Calculate the mean loss
+                if reg_alpha: # reg_alpha = None -> False
                     loss += reg_alpha * model.embed.reg()
                 lst.append(loss)
                 losses_lst.append(losses.detach().cpu())
-            loss = torch.stack(lst, 0).mean(0)
-            loss.backward()
+            loss = torch.stack(lst, 0).mean(0) # Calculate the mean loss over the samples
+            loss.backward() # Backward pass to calculate the gradients
             if torch.isnan(loss):
-                m = torch.isnan(losses_lst[-1])
+                m = torch.isnan(losses_lst[-1]) # Define mask m that indicates which elements in the losses_lst are nan
+                # Print the loss, the indices of the nan elements, the log probabilities, the input and the targets
                 print(losses_lst[-1])
                 print(m.nonzero())
                 print(log_probs[m])
                 print(x[m], tgts[m])
                 raise ValueError("loss is nan")
-            if max_grad_norm is not None:
+            if max_grad_norm is not None: # max_grad_norm = None -> False
                 torch.nn.utils.clip_grad_norm_(
                     [p for p in model.parameters() if p.requires_grad],
                     max_grad_norm,
                 )
-            epoch_losses.append(torch.stack(losses_lst, 0).mean(0).numpy())
-            opt.step()
-            opt.zero_grad()
-            model.zero_grad()
-        epoch_loss = np.concatenate(epoch_losses, 0).mean()
+            epoch_losses.append(torch.stack(losses_lst, 0).mean(0).numpy()) # Append the mean loss for the epoch
+            opt.step() # Update the parameters
+            opt.zero_grad() # Zero the gradients to decontaminate the gradients
+            model.zero_grad() # Zero the gradients to decontaminate the gradients
+        epoch_loss = np.concatenate(epoch_losses, 0).mean() # Join the losses for the epoch and calculate the mean loss
         d = {"loss": epoch_loss.mean()}
-        t.set_postfix(d)
-        out.append(epoch_loss.mean())
-        model.eval()
+        t.set_postfix(d) # Set the progress bar postfix to mean loss
+        out.append(epoch_loss.mean()) # Append the mean loss to the out list
+        model.eval() # Set the model to evaluation mode
         with torch.no_grad():
             d = {
                 "epoch": epoch,
                 "epoch_loss": epoch_loss.mean(),
                 "split": "train",
-            }
+            } # Dictionary with the current epoch, the mean loss and the train split
             d["loss"], d["acc"], m = run_test(
                 model,
                 X_train,
@@ -244,15 +238,15 @@ def run_training(
                 loss_agg=loss_agg,
                 o_idx=o_idx,
                 idx_t=idx_t,
-            )
-            d.update(m)
-            metrics.append(d)
-            for split, X, Y in eval_splits:
+            ) # Run the test on the training data - Line 275
+            d.update(m) # Update the dictionary with the metrics (precision, recall, f1 score)
+            metrics.append(d) 
+            for split, X, Y in eval_splits: # eval_splits = [("val", X_val, Y_val), ("test", X_test, Y_test)] (parameter)
                 d = {
                     "epoch": epoch,
                     "epoch_loss": epoch_loss.mean(),
                     "split": split,
-                }
+                } # Dictionary with the current epoch, the mean loss and the split (val or test)
                 d["loss"], d["acc"], m = run_test(
                     model,
                     X,
@@ -264,10 +258,10 @@ def run_training(
                     loss_agg=loss_agg,
                     o_idx=o_idx,
                     idx_t=idx_t,
-                )
-                d.update(m)
-                metrics.append(d)
-        if patience is not None and epoch - np.argmin(out) > patience:
+                ) # Run the test on the validation or test data - Line 275
+                d.update(m) # Update the dictionary with the metrics (None)
+                metrics.append(d) # Append the dictionary to the metrics list
+        if patience is not None and epoch - np.argmin(out) > patience: # patience = None -> False
             logger.info(f"no improvement for {patience} epochs, stopping")
             break
 
@@ -296,42 +290,40 @@ def run_test(
     true = []
     model.eval()
     for x, y in dataloader:
-        x = x.to(model.device)
-        m = (x != x_pad_idx).float()
-        mask = (m.unsqueeze(-1) @ m.unsqueeze(-2)).bool()
-        if autoregressive:
-            mask = torch.tril(mask)
+        x = x.to(model.device) # Define x as a tensor on the device (cuda, cpu, mps)
+        m = (x != x_pad_idx).float() # Define mask m typically used to mask the padding tokens
+        mask = (m.unsqueeze(-1) @ m.unsqueeze(-2)).bool() # Define 2D mask from 1D mask (mask[i, j] is True if both x[i] and x[j] are not padding elements and False otherwise)
+        if autoregressive: # autoregressive = True (default) -> True
+            mask = torch.tril(mask) # Lower triangular part of the matrix
         with torch.no_grad():
-            log_probs = model(x, mask=mask).log_softmax(-1)
+            log_probs = model(x, mask=mask).log_softmax(-1) # Calculate the log softmax of the logits to turn the logits into probabilities and the log function is applied for numerical stability
         tgts = y.to(model.device)
-        if loss_agg == "per_seq":
+        if loss_agg == "per_seq": # loss_agg = "per_token" (default) -> False
             losses = -log_probs.gather(2, tgts.unsqueeze(-1))
-            losses = losses.masked_fill(
-                (tgts == y_pad_idx).unsqueeze(-1), 0.0
-            ).sum(-1)
-        else:
-            all_losses = -log_probs.gather(2, tgts.unsqueeze(-1)).squeeze(-1)
-            masked_losses = all_losses.masked_fill((tgts == y_pad_idx), 0.0)
-            lengths = (tgts != y_pad_idx).sum(-1)
-            losses = masked_losses.sum(-1) / lengths
-        out.append(losses.detach().cpu().numpy())
-        pred = func(log_probs, -1)
-        preds.append(pred.detach().cpu().numpy())
-        true.append(tgts.detach().cpu().numpy())
-    preds = np.concatenate(preds, 0)
-    true = np.concatenate(true, 0)
-    m = true != y_pad_idx
-    acc = (preds == true)[m].mean()
+            losses = losses.masked_fill((tgts == y_pad_idx).unsqueeze(-1), 0.0).sum(-1)
+        else: # True
+            all_losses = -log_probs.gather(2, tgts.unsqueeze(-1)).squeeze(-1) # Calculate the negative log likelihood of the target tokens
+            masked_losses = all_losses.masked_fill((tgts == y_pad_idx), 0.0) # Mask the losses to ignore the padding tokens
+            lengths = (tgts != y_pad_idx).sum(-1) # Calculate the length of the target tokens by counting the non-padding tokens
+            losses = masked_losses.sum(-1) / lengths # Calculate the average loss per sequence
+        out.append(losses.detach().cpu().numpy()) # Append the average loss per sequence to the out list
+        pred = func(log_probs, -1) # Calculate the predictions by taking the argmax of the log probabilities
+        preds.append(pred.detach().cpu().numpy()) # Append the predictions to the preds list
+        true.append(tgts.detach().cpu().numpy()) # Append the targets to the true list
+    preds = np.concatenate(preds, 0) # Concatenate the predictions
+    true = np.concatenate(true, 0) # Concatenate the targets
+    m = true != y_pad_idx # Define mask m that indicates which elements in the targets are not padding
+    acc = (preds == true)[m].mean() # Calculate the accuracy by taking the mean of the correct predictions over the non-padding elements
     metrics = {}
-    if o_idx is not None:
+    if o_idx is not None: # o_idx=t_idx.get("O", None) = None -> False
         y_true = [idx_t[y[y != y_pad_idx]].tolist() for y in true]
         y_pred = [
             idx_t[y_hat[y != y_pad_idx]].tolist()
             for y, y_hat in zip(true, preds)
         ]
         metrics = metric_utils.conll_score(y_true=y_true, y_pred=y_pred)
-    loss = np.concatenate(out, 0).mean()
-    if return_preds:
+    loss = np.concatenate(out, 0).mean() # Calculate the mean loss
+    if return_preds: # return_preds = False -> False
         return loss, acc, metrics, preds, true
     return loss, acc, metrics
 
@@ -509,7 +501,7 @@ def run_standard(
     Y_val=None,
 ):
     init_emb = None
-    if args.glove_embeddings and args.do_glove:
+    if args.glove_embeddings and args.do_glove: # glove_embeddings = data/glove.840B.300d.txt, do_glove = 0 -> False
         emb = data_utils.get_glove_embeddings(
             idx_w,
             args.glove_embeddings,
@@ -517,8 +509,8 @@ def run_standard(
         )
         init_emb = torch.tensor(emb, dtype=torch.float32).T
     unembed_mask = None
-    if args.unembed_mask:
-        unembed_mask = np.array([t in ("<unk>", "<pad>") for t in idx_t])
+    if args.unembed_mask: # unembed_mask = 1 -> True
+        unembed_mask = np.array([t in ("<unk>", "<pad>") for t in idx_t]) # If the element in idx_t is either <unk> or <pad>, the corresponding element in unembed_mask is True, otherwise it's False.
     model = Transformer(
         d_vocab=len(idx_w),
         d_vocab_out=len(idx_t),
@@ -533,9 +525,9 @@ def run_standard(
         pool_outputs=args.pool_outputs,
     ).to(torch.device(args.device))
 
-    opt = Adam([p for p in model.parameters() if p.requires_grad], lr=args.lr)
+    opt = Adam([p for p in model.parameters() if p.requires_grad], lr=args.lr) # Initialize Adam optimizer
     n_epochs = args.n_epochs
-    set_seed(args.seed)
+    set_seed(args.seed) # Set seed - Line 119
     out = run_training(
         model,
         opt,
@@ -546,12 +538,12 @@ def run_standard(
         n_epochs=n_epochs,
         n_samples=1,
         autoregressive=args.autoregressive,
-        x_pad_idx=w_idx["<pad>"],
-        y_pad_idx=t_idx["<pad>"],
+        x_pad_idx=w_idx["<pad>"], # Define x_pad_idx as the index of the padding token in the input vocabulary
+        y_pad_idx=t_idx["<pad>"], # Define y_pad_idx as the index of the padding token in the target vocabulary
         loss_agg=args.loss_agg,
-        o_idx=t_idx.get("O", None),
+        o_idx=t_idx.get("O", None), # Define o_idx as the index of the O token in the target vocabulary
         idx_t=idx_t,
-    )
+    ) # Run training - Line 128
     dfs = [out]
     for split, X, Y in [
         ("train", X_train, Y_train),
@@ -563,14 +555,14 @@ def run_standard(
             X,
             Y,
             return_preds=True,
-            x_pad_idx=w_idx["<pad>"],
-            y_pad_idx=t_idx["<pad>"],
+            x_pad_idx=w_idx["<pad>"], # Define x_pad_idx as the index of the padding token in the input vocabulary
+            y_pad_idx=t_idx["<pad>"], # Define y_pad_idx as the index of the padding token in the target vocabulary
             autoregressive=args.autoregressive,
             loss_agg=args.loss_agg,
-            o_idx=t_idx.get("O", None),
+            o_idx=t_idx.get("O", None), # Define o_idx as the index of the O token in the target vocabulary
             idx_t=idx_t,
-        )
-        logger.info(f"end ({split}): loss={loss}, acc={acc}, metrics={metrics}")
+        ) # Run test - Line 275
+        logger.info(f"end ({split}): loss={loss}, acc={acc}, metrics={metrics}") # Log the loss, accuracy and metrics for the split
         df = pd.DataFrame(
             {
                 "epoch": [n_epochs],
@@ -579,21 +571,22 @@ def run_standard(
                 "acc": acc,
             }
         )
-        for k, v in metrics.items():
+        for k, v in metrics.items(): # Loop over the metrics (None)
             df[k] = v
-        dfs.append(df)
-    df = pd.concat(dfs).reset_index(drop=True)
+        dfs.append(df) # Append the dataframe to the dfs list (dfs is [{epoch, epoch_loss, split, loss, accuracy, }])
+    df = pd.concat(dfs).reset_index(drop=True) # Concatenate the dataframes and reset the indices
 
-    if args.save:
+    if args.save: # save = True -> True
         fn = Path(args.output_dir) / "model.pt"
-        logger.info(f"saving model to {fn}")
-        torch.save(model.state_dict(), str(fn))
+        logger.info(f"saving model to {fn}") # Log the location of the saved model
+        torch.save(model.state_dict(), str(fn)) # Save the model
 
     return df
 
 
 def run(args):
-    set_seed(args.seed)
+    set_seed(args.seed) # Set seed - Line 111
+
     (
         train,
         test,
@@ -619,7 +612,9 @@ def run(args):
         replace_numbers=args.replace_numbers,
         get_val=True,
         unique=args.unique,
-    )
+    ) # Get dataset - data_utils, line 564
+
+    # Log dataset information
     logger.info(f"vocab size: {len(idx_w)}")
     logger.info(f"X_train: {X_train.shape}, Y_train, {Y_train.shape}")
     logger.info(f"X_val: {X_val.shape}, Y_val, {Y_val.shape}")
@@ -644,15 +639,15 @@ def run(args):
         Y_test=Y_test,
         X_val=X_val,
         Y_val=Y_val,
-    )
+    ) # Run standard (line 485) or custom model (line 339)
     fn = Path(args.output_dir) / "results.csv"
-    logger.info(f"writing results to {fn}")
-    results.to_csv(fn, index=False)
+    logger.info(f"writing results to {fn}")     # Log location of results
+    results.to_csv(fn, index=False)             # Write results to csv file
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    logger.info(f"args: {vars(args)}")
+    args = parse_args()                 # Parse arguments - Line 25
+    logger.info(f"args: {vars(args)}")  # Log arguments
     with open(Path(args.output_dir) / "args.json", "w") as f:
-        json.dump(vars(args), f)
-    run(args)
+        json.dump(vars(args), f)        # Write variables in arg.json file
+    run(args)                           # Run the model - Line 584
