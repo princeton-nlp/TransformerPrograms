@@ -1,11 +1,10 @@
 #!/bin/bash 
 
-for SEED in 0 1 2 3 4
+for i in 0 1 2 3 4
 do
      python ../src/run.py \
           --dataset "hist" \
           --dataset_size 20000 \
-          --seed "${SEED}" \
           --d_var 8 \
           --n_heads_cat 2 \
           --n_heads_num 2 \

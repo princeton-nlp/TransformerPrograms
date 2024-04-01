@@ -22,66 +22,66 @@ def parse_args():
     parser.add_argument("--output_dir", type=str, default="output/scratch") # Output directory
 
     # Data 
-    parser.add_argument("--dataset", type=str, default="reverse")           # Dataset name (reverse, hist, double_hist, sort, most_freq, dyck1 & dyck2)
-    parser.add_argument("--vocab_size", type=int, default=8)                # Vocabulary size (8, 1 for dyck1 & 2 for dyck2)
-    parser.add_argument("--dataset_size", type=int, default=-1)             # dataset size (20.000)
-    parser.add_argument("--min_length", type=int, default=1)                # Minimum length of the vocabulary (default: 1)
-    parser.add_argument("--max_length", type=int, default=8)                # Maximum length of the vocabulary (8, or 16 for dyck1 & dyck2)
-    parser.add_argument("--seed", type=int, default=0)                      # Seed for random number generator (five random seeds)
-    parser.add_argument("--do_lower", type=int, default=0)                  # Lowercase the dataset (default: 0)
-    parser.add_argument("--unique", type=int, default=1)                    # Unique dataset (default: 1)
-    parser.add_argument("--replace_numbers", type=int, default=0)           # Replace numbers with <num> (default: 0)
+    parser.add_argument("--dataset", type=str, default="reverse")               # Dataset name (reverse, hist, double_hist, sort, most_freq, dyck1 & dyck2)
+    parser.add_argument("--vocab_size", type=int, default=8)                    # Vocabulary size (8, 1 for dyck1 & 2 for dyck2)
+    parser.add_argument("--dataset_size", type=int, default=-1)                 # dataset size (20.000)
+    parser.add_argument("--min_length", type=int, default=1)                    # Minimum length of the vocabulary (default: 1)
+    parser.add_argument("--max_length", type=int, default=8)                    # Maximum length of the vocabulary (8, or 16 for dyck1 & dyck2)
+    parser.add_argument("--seed", type=int, default=random.randint(0, 100000))  # Seed for random number generator (five random seeds)
+    parser.add_argument("--do_lower", type=int, default=0)                      # Lowercase the dataset (default: 0)
+    parser.add_argument("--unique", type=int, default=1)                        # Unique dataset (default: 1)
+    parser.add_argument("--replace_numbers", type=int, default=0)               # Replace numbers with <num> (default: 0)
 
     # Model
-    parser.add_argument("--n_vars_cat", type=int, default=1)                # Number of categorical variables (default: 1)
-    parser.add_argument("--n_vars_num", type=int, default=1)                # Number of numerical variables (default: 1)
-    parser.add_argument("--d_var", type=int, default=None)                  # Dimension of the variable (max_length)
-    parser.add_argument("--n_heads_cat", type=int, default=2)               # Number of categorical heads (2 for hist, double_hist & dyck2, or 4 for reverse, sort, most_freq & dyck1)
-    parser.add_argument("--n_heads_num", type=int, default=2)               # Number of numerical heads (2 for hist, double_hist & dyck2, or 4 for reverse, sort, most_freq & dyck1)
-    parser.add_argument("--d_mlp", type=int, default=64)                    # Dimension of the MLP (default: 64)
-    parser.add_argument("--n_cat_mlps", type=int, default=1)                # Number of categorical MLPs (1 for reverse, hist, double_hist & dyck1, or 2 for sort, most_freq & dyck2)
-    parser.add_argument("--n_num_mlps", type=int, default=1)                # Number of numerical MLPs (1 for reverse, hist, double_hist & dyck1, or 2 for sort, most_freq & dyck2)
-    parser.add_argument("--mlp_vars_in", type=int, default=2)               # MLP variables input (default: 2)
-    parser.add_argument("--n_layers", type=int, default=1)                  # Number of layers (3, or 1 for hist)
-    parser.add_argument("--sample_fn", type=str, default="gumbel_soft")     # Sampling function (default: gumbel_soft)
-    parser.add_argument("--one_hot_embed", action="store_true")             # One hot embedding (default: False)
-    parser.add_argument("--count_only", action="store_true")                # Count only (default: False)
-    parser.add_argument("--selector_width", type=int, default=0)            # Selector width (default: 0)
-    parser.add_argument("--attention_type", type=str, default="cat")        # Attention type (default: cat)
-    parser.add_argument("--rel_pos_bias", type=str, default="fixed")        # Relative positional bias (default: fixed)
-    parser.add_argument("--mlp_type", type=str, default="cat")              # MLP type (default: cat)
-    parser.add_argument("--autoregressive", action="store_true")            # Autoregressive (default: False)
+    parser.add_argument("--n_vars_cat", type=int, default=1)                    # Number of categorical variables (default: 1)
+    parser.add_argument("--n_vars_num", type=int, default=1)                    # Number of numerical variables (default: 1)
+    parser.add_argument("--d_var", type=int, default=None)                      # Dimension of the variable (max_length)
+    parser.add_argument("--n_heads_cat", type=int, default=2)                   # Number of categorical heads (2 for hist, double_hist & dyck2, or 4 for reverse, sort, most_freq & dyck1)
+    parser.add_argument("--n_heads_num", type=int, default=2)                   # Number of numerical heads (2 for hist, double_hist & dyck2, or 4 for reverse, sort, most_freq & dyck1)
+    parser.add_argument("--d_mlp", type=int, default=64)                        # Dimension of the MLP (default: 64)
+    parser.add_argument("--n_cat_mlps", type=int, default=1)                    # Number of categorical MLPs (1 for reverse, hist, double_hist & dyck1, or 2 for sort, most_freq & dyck2)
+    parser.add_argument("--n_num_mlps", type=int, default=1)                    # Number of numerical MLPs (1 for reverse, hist, double_hist & dyck1, or 2 for sort, most_freq & dyck2)
+    parser.add_argument("--mlp_vars_in", type=int, default=2)                   # MLP variables input (default: 2)
+    parser.add_argument("--n_layers", type=int, default=1)                      # Number of layers (3, or 1 for hist)
+    parser.add_argument("--sample_fn", type=str, default="gumbel_soft")         # Sampling function (default: gumbel_soft)
+    parser.add_argument("--one_hot_embed", action="store_true")                 # One hot embedding (default: False)
+    parser.add_argument("--count_only", action="store_true")                    # Count only (default: False)
+    parser.add_argument("--selector_width", type=int, default=0)                # Selector width (default: 0)
+    parser.add_argument("--attention_type", type=str, default="cat")            # Attention type (default: cat)
+    parser.add_argument("--rel_pos_bias", type=str, default="fixed")            # Relative positional bias (default: fixed)
+    parser.add_argument("--mlp_type", type=str, default="cat")                  # MLP type (default: cat)
+    parser.add_argument("--autoregressive", action="store_true")                # Autoregressive (default: False)
 
-    parser.add_argument(                                                    # Glove embeddings (data/glove.840B.300d.txt)
+    parser.add_argument(                                                        # Glove embeddings (data/glove.840B.300d.txt)
         "--glove_embeddings", type=str, default="data/glove.840B.300d.txt"
+    parser.add_argument("--do_glove", type=int, default=0)                      # Do glove (default: 0)
     )
-    parser.add_argument("--do_glove", type=int, default=0)                  # Do glove (default: 0)
 
-    parser.add_argument("--unembed_mask", type=int, default=1)              # Unembed mask (default: 1)
-    parser.add_argument("--pool_outputs", type=int, default=0)              # Pool outputs (default: 0)
+    parser.add_argument("--unembed_mask", type=int, default=1)                  # Unembed mask (default: 1)
+    parser.add_argument("--pool_outputs", type=int, default=0)                  # Pool outputs (default: 0)
 
     # Standard model
-    parser.add_argument("--standard", action="store_true")                  # Standard model (default: False)
-    parser.add_argument("--d_model", type=int, default=64)                  # Dimension of the model (default: 64)
-    parser.add_argument("--d_head", type=int, default=None)                 # Dimension of the heads (default: None)
-    parser.add_argument("--n_heads", type=int, default=2)                   # Number of heads (default: 2)
-    parser.add_argument("--dropout", type=float, default=0.0)               # Dropout rate (default: 0.0)
+    parser.add_argument("--standard", action="store_true")                      # Standard model (default: False)
+    parser.add_argument("--d_model", type=int, default=64)                      # Dimension of the model (default: 64)
+    parser.add_argument("--d_head", type=int, default=None)                     # Dimension of the heads (default: None)
+    parser.add_argument("--n_heads", type=int, default=2)                       # Number of heads (default: 2)
+    parser.add_argument("--dropout", type=float, default=0.0)                   # Dropout rate (default: 0.0)
 
     # Training
-    parser.add_argument("--lr", type=float, default=5e-2)                   # Learning rate (default: 5e-2)
-    parser.add_argument("--max_grad_norm", type=float, default=None)        # Maximum gradient norm (default: None)
-    parser.add_argument("--gumbel_samples", type=int, default=1)            # Gumbel samples (default: 1)
-    parser.add_argument("--n_epochs", type=int, default=250)                # Number of epochs (default: 250)
-    parser.add_argument("--batch_size", type=int, default=512)              # Batch size (default: 512)
-    parser.add_argument("--tau_init", type=float, default=3.0)              # Gumbel temperature initialization (default: 3.0)
-    parser.add_argument("--tau_end", type=float, default=0.01)              # Gumbel temperature end (default: 0.01)
-    parser.add_argument("--tau_schedule", type=str, default="geomspace")    # Gumbel temperature schedule (default: geomspace)
-    parser.add_argument("--loss_agg", type=str, default="per_token")        # Loss aggregation (default: per_token)
+    parser.add_argument("--lr", type=float, default=5e-2)                       # Learning rate (default: 5e-2)
+    parser.add_argument("--max_grad_norm", type=float, default=None)            # Maximum gradient norm (default: None)
+    parser.add_argument("--gumbel_samples", type=int, default=1)                # Gumbel samples (default: 1)
+    parser.add_argument("--n_epochs", type=int, default=250)                    # Number of epochs (default: 250)
+    parser.add_argument("--batch_size", type=int, default=512)                  # Batch size (default: 512)
+    parser.add_argument("--tau_init", type=float, default=3.0)                  # Gumbel temperature initialization (default: 3.0)
+    parser.add_argument("--tau_end", type=float, default=0.01)                  # Gumbel temperature end (default: 0.01)
+    parser.add_argument("--tau_schedule", type=str, default="geomspace")        # Gumbel temperature schedule (default: geomspace)
+    parser.add_argument("--loss_agg", type=str, default="per_token")            # Loss aggregation (default: per_token)
 
-    parser.add_argument("--save", action="store_true")                      # Save model (default: False)
-    parser.add_argument("--save_code", action="store_true")                 # Save code (default: False)
+    parser.add_argument("--save", action="store_true")                          # Save model (default: False)
+    parser.add_argument("--save_code", action="store_true")                     # Save code (default: False)
 
-    parser.add_argument("--device", type=str, default="cuda")               # Device (cuda, cpu, mps)
+    parser.add_argument("--device", type=str, default="cuda")                   # Device (cuda, cpu, mps)
         
     args = parser.parse_args()
     
@@ -105,14 +105,10 @@ def run_test(
     X,                          # 1. Array (129600), 2. Array (14400), 3. Array (16000), 4. Array (129600), 5. Array (14400), 6. Array (16000)
     Y,                          # 1. Array (129600), 2. Array (14400), 3. Array (16000), 4. Array (129600), 5. Array (14400), 6. Array (16000)
     batch_size=256,             # 1. 512, 2. 512, 3. 512, 4. 256, 5. 256, 6. 256
-    return_preds=False,         # 1. False, 2. False, 3. False, 4. True, 5. True, 6. True
     x_pad_idx=0,                # 1. 0, 2. 0, 3. 0, 4. 0, 5. 0, 6. 0
     y_pad_idx=0,                # 1. 0, 2. 0, 3. 0, 4. 0, 5. 0, 6. 0
     autoregressive=False,       # 1. False, 2. False, 3. False, 4. False, 5. False, 6. False
     func=torch.argmax,          # 1. argmax, 2. argmax, 3. argmax, 4. argmax, 5. argmax, 6. argmax
-    loss_agg="per_token",       # 1. "per_token", 2. "per_token", 3. "per_token", 4. "per_token", 5. "per_token", 6. "per_token"
-    o_idx=None,                 # 1. None, 2. None, 3. None, 4. None, 5. None, 6. None
-    idx_t=None,                 # 1. Array (7), 2. Array (7), 3. Array (7), 4. Array (7), 5. Array (7), 6. Array (7)
 ):
     dataloader = DataLoader(
         list(zip(X, Y)), batch_size=batch_size, shuffle=False
@@ -151,22 +147,13 @@ def run_training(
     opt,                        # 1. Adam
     X_train,                    # 1. Array (129600)
     Y_train,                    # 1. Array (129600)
-    X_test=None,                # 1. None
-    Y_test=None,                # 1. None
     eval_splits=None,           # 1. [("val", X_val, Y_val), ("test", X_test, Y_test)]
     batch_size=256,             # 1. 256
     n_epochs=5,                 # 1. 250
     temps=None,                 # 1. np.geomspace(args.tau_init, args.tau_end, n_epochs)
-    n_samples=1,                # 1. 1
     x_pad_idx=0,                # 1. 0
     y_pad_idx=0,                # 1. 0
     autoregressive=False,       # 1. False
-    loss_agg="per_token",       # 1. "per_token"
-    max_grad_norm=None,         # 1. None
-    reg_alpha=None,             # 1. None
-    patience=None,              # 1. None
-    o_idx=None,                 # 1. None
-    idx_t=None,                 # 1. Array (7)
     smooth_temps=True,          # 1. True
 ):
     train_dataloader = DataLoader(
@@ -200,8 +187,7 @@ def run_training(
             losses_lst = []
             tgts = y.to(model.device) # Define tgts as a tensor on the device (cuda, cpu, mps)
             
-            logits = model(x, mask=mask)
-            log_probs = logits.log_softmax(-1) # Log softmax of the logits to get the logits into probabilities and the log function is applied for numerical stability
+            log_probs = model(x, mask=mask).log_softmax(-1) # Log softmax of the logits to get the logits into probabilities and the log function is applied for numerical stability
             all_losses = -log_probs.gather(2, tgts.unsqueeze(-1)).squeeze(-1) # Calculate the negative log likelihood of the target tokens
             masked_losses = all_losses.masked_fill((tgts == y_pad_idx), 0.0) # Mask the losses to ignore the padding tokens
             lengths = (tgts != y_pad_idx).sum(-1) # Calculate the length of the target tokens by counting the non-padding tokens
@@ -240,15 +226,12 @@ def run_training(
             } # Dictionary with the current epoch, the mean loss and the train split
             
             d["loss"], d["acc"] = run_test(
-                model,
-                X_train,
-                Y_train,
+                model=model,
+                X=X_train,
+                Y=Y_train,
                 x_pad_idx=x_pad_idx,
                 y_pad_idx=y_pad_idx,
                 autoregressive=autoregressive,
-                loss_agg=loss_agg,
-                o_idx=o_idx,
-                idx_t=idx_t,
             ) # Run the test on the training data - Line 275
             
             # d.update(m) # Update the dictionary with the metrics (precision, recall, f1 score)
@@ -261,16 +244,13 @@ def run_training(
                     "split": split,
                 } # Dictionary with the current epoch, the mean loss and the split (val or test)
                 d["loss"], d["acc"] = run_test(
-                    model,
-                    X,
-                    Y,
+                    model=model,
+                    X=X,
+                    Y=Y,
                     batch_size=batch_size,
                     x_pad_idx=x_pad_idx,
                     y_pad_idx=y_pad_idx,
                     autoregressive=autoregressive,
-                    loss_agg=loss_agg,
-                    o_idx=o_idx,
-                    idx_t=idx_t,
                 ) # Run the test on the validation or test data - Line 275
                 
                 # d.update(m) # Update the dictionary with the metrics (None)
@@ -281,8 +261,6 @@ def run_training(
 
 def run_program(
     args,
-    train=None,
-    test=None,
     idx_w=None,
     w_idx=None,
     idx_t=None,
@@ -326,22 +304,17 @@ def run_program(
     n_epochs = args.n_epochs
     set_seed(args.seed) # Set seed - Line X (Redundant!!??)
     out = run_training(
-        model,
-        opt,
-        X_train,
-        Y_train,
+        model=model,
+        opt=opt,
+        X_train=X_train,
+        Y_train=Y_train,
         eval_splits=[("val", X_val, Y_val), ("test", X_test, Y_test)],
         batch_size=args.batch_size,
         n_epochs=n_epochs,
-        n_samples=args.gumbel_samples,
         autoregressive=args.autoregressive,
         temps=np.geomspace(args.tau_init, args.tau_end, n_epochs),
         x_pad_idx=w_idx["<pad>"], # Define x_pad_idx as the index of the padding token in the input vocabulary
         y_pad_idx=t_idx["<pad>"], # Define y_pad_idx as the index of the padding token in the target vocabulary
-        loss_agg=args.loss_agg,
-        max_grad_norm=args.max_grad_norm,
-        o_idx=t_idx.get("O", None), # Define o_idx as the index of the O token in the target vocabulary
-        idx_t=idx_t,
     ) # Run training - Line X
     
     out["sample_fn"] = args.sample_fn # Define the sample function (Default: gumbel_soft)
@@ -354,16 +327,12 @@ def run_program(
         ("test", X_test, Y_test),
     ]:
         loss, acc = run_test(
-            model,
-            X,
-            Y,
-            return_preds=True,
+            model=model,
+            X=X,
+            Y=Y,
             x_pad_idx=w_idx["<pad>"], # Define x_pad_idx as the index of the padding token in the input vocabulary
             y_pad_idx=t_idx["<pad>"], # Define y_pad_idx as the index of the padding token in the target vocabulary
             autoregressive=args.autoregressive,
-            loss_agg=args.loss_agg,
-            o_idx=t_idx.get("O", None), # Define o_idx as the index of the O token in the target vocabulary
-            idx_t=idx_t,
         ) # Run test - Line 275
         
         logger.info(f"end ({split}): loss={loss}, acc={acc}") # Log the loss, accuracy and metrics for the split
@@ -451,8 +420,6 @@ def run(args):
     
     results = run_program(
         args,
-        train=train,
-        test=test,
         idx_w=idx_w,
         w_idx=w_idx,
         idx_t=idx_t,
