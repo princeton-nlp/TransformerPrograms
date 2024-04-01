@@ -20,7 +20,7 @@ import torch
 
 from models.programs import TransformerProgramModel, argmax
 
-from src.run import set_seed, get_sample_fn
+from src.run_old import set_seed, get_sample_fn
 from utils import code_utils, data_utils, logging
 
 

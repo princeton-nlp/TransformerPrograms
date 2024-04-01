@@ -48,5 +48,5 @@ def initialize(output_dir, resume=False):
 
 
 def get_logger(name):
-    logging.basicConfig(handlers=[get_handler(stream=None)], level=logging.INFO) # Uncessary get_handler parameter?
+    logging.basicConfig(handlers=[get_handler(stream=None)], level=logging.INFO) # Unnecessary get_handler parameter?
     return logging.getLogger(name)
