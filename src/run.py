@@ -1,19 +1,11 @@
 import argparse
-import copy
-from copy import deepcopy
-from functools import partial
-import itertools
 import json
-import math
 from pathlib import Path
 import random
 
-import einops
 import numpy as np
 import pandas as pd
 import torch
-from torch import nn
-from torch.nn import functional as F
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -38,12 +30,14 @@ def parse_args():
     parser.add_argument("--output_dir", type=str, default="output/scratch")
 
     # Data
-    parser.add_argument("--dataset", type=str, default="reverse")
+    parser.add_argument("--dataset", type=str, default="hist")
     parser.add_argument("--vocab_size", type=int, default=8)
-    parser.add_argument("--dataset_size", type=int, default=-1)
-    parser.add_argument("--min_length", type=int, default=1)
-    parser.add_argument("--max_length", type=int, default=8)
-    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--dataset_size", type=int, default=20000)
+    parser.add_argument("--train_min_length", type=int, default=1)
+    parser.add_argument("--train_max_length", type=int, default=10)
+    parser.add_argument("--test_min_length", type=int, default=11)
+    parser.add_argument("--test_max_length", type=int, default=20)
+    parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--do_lower", type=int, default=0)
     parser.add_argument("--unique", type=int, default=1)
     parser.add_argument("--replace_numbers", type=int, default=0)
@@ -51,7 +45,7 @@ def parse_args():
     # Model
     parser.add_argument("--n_vars_cat", type=int, default=1)
     parser.add_argument("--n_vars_num", type=int, default=1)
-    parser.add_argument("--d_var", type=int, default=None)
+    parser.add_argument("--d_var", type=int, default=20)
     parser.add_argument("--n_heads_cat", type=int, default=2)
     parser.add_argument("--n_heads_num", type=int, default=2)
     parser.add_argument("--d_mlp", type=int, default=64)
@@ -60,8 +54,8 @@ def parse_args():
     parser.add_argument("--mlp_vars_in", type=int, default=2)
     parser.add_argument("--n_layers", type=int, default=1)
     parser.add_argument("--sample_fn", type=str, default="gumbel_soft")
-    parser.add_argument("--one_hot_embed", action="store_true")
-    parser.add_argument("--count_only", action="store_true")
+    parser.add_argument("--one_hot_embed", action="store_true", default=True)
+    parser.add_argument("--count_only", action="store_true", default=True)
     parser.add_argument("--selector_width", type=int, default=0)
     parser.add_argument("--attention_type", type=str, default="cat")
     parser.add_argument("--rel_pos_bias", type=str, default="fixed")
@@ -94,10 +88,10 @@ def parse_args():
     parser.add_argument("--tau_schedule", type=str, default="geomspace")
     parser.add_argument("--loss_agg", type=str, default="per_token")
 
-    parser.add_argument("--save", action="store_true")
-    parser.add_argument("--save_code", action="store_true")
+    parser.add_argument("--save", action="store_true", default=True)
+    parser.add_argument("--save_code", action="store_true", default=True)
 
-    parser.add_argument("--device", type=str, default="cuda")
+    parser.add_argument("--device", type=str, default="cpu")
 
     args = parser.parse_args()
 
@@ -391,7 +385,7 @@ def run_program(
         n_num_mlps=args.n_num_mlps,
         mlp_vars_in=args.mlp_vars_in,
         n_layers=args.n_layers,
-        n_ctx=X_train.shape[1],
+        n_ctx=X_test.shape[1],
         sample_fn=get_sample_fn(args.sample_fn),
         init_emb=init_emb,
         attention_type=args.attention_type,
@@ -612,11 +606,11 @@ def run(args):
         name=args.dataset,
         vocab_size=args.vocab_size,
         dataset_size=args.dataset_size,
-        min_length=args.min_length,
-        max_length=args.max_length,
+        train_min_length=args.train_min_length,
+        train_max_length=args.train_max_length,
+        test_min_length=args.test_min_length,
+        test_max_length=args.test_max_length,
         seed=args.seed,
-        do_lower=args.do_lower,
-        replace_numbers=args.replace_numbers,
         get_val=True,
         unique=args.unique,
     )

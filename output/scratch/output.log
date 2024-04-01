@@ -1,0 +1,13 @@
+I 2024-04-01T15:46:59 __main__:649: args: {'output_dir': 'output/scratch', 'dataset': 'hist', 'vocab_size': 8, 'dataset_size': 20000, 'train_min_length': 1, 'train_max_length': 10, 'test_min_length': 11, 'test_max_length': 20, 'seed': 1, 'do_lower': 0, 'unique': 1, 'replace_numbers': 0, 'n_vars_cat': 1, 'n_vars_num': 1, 'd_var': 20, 'n_heads_cat': 2, 'n_heads_num': 2, 'd_mlp': 64, 'n_cat_mlps': 1, 'n_num_mlps': 1, 'mlp_vars_in': 2, 'n_layers': 1, 'sample_fn': 'gumbel_soft', 'one_hot_embed': True, 'count_only': True, 'selector_width': 0, 'attention_type': 'cat', 'rel_pos_bias': 'fixed', 'mlp_type': 'cat', 'autoregressive': False, 'glove_embeddings': 'data/glove.840B.300d.txt', 'do_glove': 0, 'unembed_mask': 1, 'pool_outputs': 0, 'standard': False, 'd_model': 64, 'd_head': None, 'n_heads': 2, 'dropout': 0.0, 'lr': 0.05, 'max_grad_norm': None, 'gumbel_samples': 1, 'n_epochs': 250, 'batch_size': 512, 'tau_init': 3.0, 'tau_end': 0.01, 'tau_schedule': 'geomspace', 'loss_agg': 'per_token', 'save': True, 'save_code': True, 'device': 'cpu'}
+I 2024-04-01T15:47:02 __main__:617: vocab size: 8
+I 2024-04-01T15:47:02 __main__:618: X_train: (20000, 10), Y_train, (20000, 10)
+I 2024-04-01T15:47:02 __main__:619: X_val: (4000, 20), Y_val, (4000, 20)
+I 2024-04-01T15:47:02 __main__:620: X_test: (4000, 20), Y_test, (4000, 20)
+I 2024-04-01T15:47:02 __main__:623: 20000/20000 unique training inputs
+I 2024-04-01T15:47:02 __main__:624: 4000/4000 unique test inputs not in train
+I 2024-04-01T15:59:59 __main__:446: train: loss=0.0036318032070994377, acc=0.9997811321305328, metrics={}
+I 2024-04-01T15:59:59 __main__:446: val: loss=1.0168250799179077, acc=0.802635319298363, metrics={}
+I 2024-04-01T15:59:59 __main__:446: test: loss=1.0168250799179077, acc=0.802635319298363, metrics={}
+I 2024-04-01T15:59:59 __main__:463: saving model to output/scratch/model.pt
+I 2024-04-01T15:59:59 __main__:467: saving code to output/scratch
+I 2024-04-01T15:59:59 __main__:643: writing results to output/scratch/results.csv
