@@ -10,4 +10,5 @@ Gemfile.lock
 data
 .DS_Store
 */output/*
+output/*
 ```
