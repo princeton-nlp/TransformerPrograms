@@ -9,5 +9,6 @@ Gemfile.lock
 .vscode
 data
 .DS_Store
-*/output/
+*/output/*
+output/*
 ```

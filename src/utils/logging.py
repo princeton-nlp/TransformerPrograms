@@ -1,5 +1,5 @@
-import csv
-import json
+# import csv
+# import json
 import logging
 from pathlib import Path
 import sys
@@ -48,5 +48,5 @@ def initialize(output_dir, resume=False):
 
 
 def get_logger(name):
-    logging.basicConfig(handlers=[get_handler(stream=None)], level=logging.INFO)
+    logging.basicConfig(handlers=[get_handler(stream=None)], level=logging.INFO) # Unnecessary get_handler parameter?
     return logging.getLogger(name)

@@ -1,26 +1,26 @@
 import argparse
-import copy
-from copy import deepcopy
-from functools import partial
-import itertools
+# import copy
+# from copy import deepcopy
+# from functools import partial
+# import itertools
 import json
-import math
+# import math
 from pathlib import Path
-import random
+# import random
 
-import einops
+# import einops
 import numpy as np
-import pandas as pd
-import re
+# import pandas as pd
+# import re
 import torch
-from torch import nn
-from torch.nn import functional as F
-from torch.utils.data import DataLoader
-from tqdm import tqdm
+# from torch import nn
+# from torch.nn import functional as F
+# from torch.utils.data import DataLoader
+# from tqdm import tqdm
 
 from models.programs import TransformerProgramModel, argmax
 
-from run import set_seed, get_sample_fn
+from src.run_old import set_seed, get_sample_fn
 from utils import code_utils, data_utils, logging
 
 
