@@ -146,6 +146,31 @@ def make_most_freq(
     return pd.DataFrame({"sent": sents, "tags": tags})
 
 
+def make_addition(vocab_size, dataset_size, min_length=1, max_length=2, seed=0):
+    """make the dataset for training the addition task"""
+    # vocab = all numbers we want to allow being added together
+    vocab = np.array([str(i) for i in range(10)])
+
+    # sents = input sentence
+    # tags  = output string
+    sents, tags = [], []
+    np.random.seed(seed)
+
+    for _ in range(dataset_size):
+
+        l1 = np.random.randint(min_length, max_length)  # length first number
+        l2 = np.random.randint(min_length, max_length)  # length second number
+        sent = np.random.choice(vocab, size=l1+l2+1, replace=True).tolist()
+        # l1=2 l2=3 ->  43+567
+        sent[l1] = "+"
+        sents.append([BOS] + sent)
+
+        t = [PAD] + str(int(sent[:l1]) + int(sent[l1+1:])).split()
+        t += [BOS] * (len(sents[-1]) - len(t))
+        tags.append(t)
+    return pd.DataFrame({"sent": sents, "tags": tags})
+
+
 def sample_dyck(vocab_size=1, max_depth=8, min_depth=1):
     vocab = [("(", ")"), ("{", "}")][:vocab_size]
     s = []
@@ -183,9 +208,7 @@ def tag_dyck_pft(sent):
     return tags
 
 
-def make_dyck_pft(
-    vocab_size, dataset_size, min_length=2, max_length=16, seed=0
-):
+def make_dyck_pft(vocab_size, dataset_size, min_length=2, max_length=16, seed=0):
     sents, tags = [], []
     ls = []
     vocab = [c for cs in [("(", ")"), ("{", "}")][:vocab_size] for c in cs]
@@ -422,7 +445,8 @@ def get_conll_ner(
             f"no validation set for {name}, splitting "
             f"{len(train_full)} -> {len(train)}/{len(val)}"
         )
-    f = lambda lst: len(lst) >= min_length and len(lst) < max_length - 1
+
+    def f(lst): return len(lst) >= min_length and len(lst) < max_length - 1
     lst = []
 
     def fmt(w):
@@ -502,7 +526,8 @@ def get_classification_dataset(
     else:
         train, test = data["train"].to_pandas(), data["test"].to_pandas()
         val = test
-    f = lambda lst: len(lst) >= min_length and (
+
+    def f(lst): return len(lst) >= min_length and (
         max_length is None or len(lst) < max_length - 1
     )
     lst = []
@@ -607,6 +632,7 @@ def get_dataset(
         "dyck1": make_dyck_pft,
         "dyck2": make_dyck_pft,
         "sort": make_sort,
+        "add": make_addition,
     }
     if name not in fns:
         raise NotImplementedError(name)
