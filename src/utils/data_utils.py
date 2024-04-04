@@ -163,9 +163,10 @@ def make_addition(vocab_size, dataset_size, min_length=1, max_length=2, seed=0):
         sent = np.random.choice(vocab, size=l1+l2+1, replace=True).tolist()
         # l1=2 l2=3 ->  43+567
         sent[l1] = "+"
+        sent_str = "".join(sent)
         sents.append([BOS] + sent)
 
-        t = [PAD] + str(int(sent[:l1]) + int(sent[l1+1:])).split()
+        t = [PAD] + str(int(sent_str[:l1]) + int(sent_str[l1+1:])).split()
         t += [BOS] * (len(sents[-1]) - len(t))
         tags.append(t)
     return pd.DataFrame({"sent": sents, "tags": tags})
