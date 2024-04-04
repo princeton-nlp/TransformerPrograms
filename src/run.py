@@ -52,10 +52,10 @@ def parse_args():
     parser.add_argument("--mlp_type", type=str, default="cat")                  # MLP type (default: cat)
     parser.add_argument("--autoregressive", action="store_true")                # Autoregressive (default: False)
 
-    parser.add_argument(                                                        # Glove embeddings (data/glove.840B.300d.txt)
+    parser.add_argument(
         "--glove_embeddings", type=str, default="data/glove.840B.300d.txt"
+    )                                                                           # Glove embeddings (data/glove.840B.300d.txt)
     parser.add_argument("--do_glove", type=int, default=0)                      # Do glove (default: 0)
-    )
 
     parser.add_argument("--unembed_mask", type=int, default=1)                  # Unembed mask (default: 1)
     parser.add_argument("--pool_outputs", type=int, default=0)                  # Pool outputs (default: 0)

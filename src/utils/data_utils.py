@@ -146,6 +146,78 @@ def make_most_freq(
     return pd.DataFrame({"sent": sents, "tags": tags})
 
 
+def make_addition(vocab_size, dataset_size, min_length=1, max_length=5, seed=0):
+    """make the dataset for training the addition task"""
+    # vocab = all numbers we want to allow being added together
+    vocab = np.array([str(i) for i in range(10)])
+
+    # sents = input sentence
+    # tags  = output string
+    sents, tags = [], []
+    np.random.seed(seed)
+
+    for _ in range(dataset_size):
+
+        l1 = np.random.randint(1, max_length-2)  # length first number
+        l2 = np.random.randint(max(1, min_length-l1), max_length-l1-1)  # length second number
+        sent = np.random.choice(vocab, size=l1+l2+1, replace=True).tolist()
+        # l1=2 l2=3 ->  43+567
+        sent[l1] = "+"
+        sent_str = "".join(sent)
+        sents.append([BOS] + sent)
+
+        t = [PAD] + str(int(sent_str[:l1]) + int(sent_str[l1+1:])).split()
+        t += [BOS] * (len(sents[-1]) - len(t))
+        tags.append(t)
+    return pd.DataFrame({"sent": sents, "tags": tags})
+
+
+def make_addition_with_hints(vocab_size, dataset_size, min_length=1, max_length=5, seed=0):
+    """make the dataset for training the addition task"""
+    # vocab = all numbers we want to allow being added together
+    vocab = np.array([str(i) for i in range(10)])
+
+    # sents = input sentence
+    # tags  = output string
+    sents, tags = [], []
+    np.random.seed(seed)
+
+    for _ in range(dataset_size):
+
+        max_length_nums = (max_length-3)//2  # without start of string and plus, divide by two for index hints
+        l1 = np.random.randint(1, max_length_nums-1)  # length first number, leave at least 1 for len other number
+        l2 = np.random.randint(max(1, min_length-l1), max_length_nums-l1)  # length second number
+        num1 = np.random.choice(vocab, size=l1, replace=True).tolist()
+        num2 = np.random.choice(vocab, size=l2, replace=True).tolist()
+
+        ans = list(str(int("".join(num1)) + int("".join(num2))))
+        l_ans = len(ans)
+        num1_pad = ["0"] * (l_ans - l1) + num1
+        num2_pad = ["0"] * (l_ans - l2) + num2
+
+        alpha = [str(-100 - i) for i in range(l_ans)]
+
+        new_num1, new_num2, new_ans = [], [], []
+
+        for i in range(l_ans):
+            new_num1.append(alpha[i])
+            new_num1.append(num1_pad[i])
+
+            new_num2.append(alpha[i])
+            new_num2.append(num2_pad[i])
+
+            new_ans.append(alpha[i])
+            new_ans.append(ans[i])
+
+        sent = new_num1 + ["+"] + new_num2
+        sents.append([BOS] + sent)
+
+        t = [PAD] + new_ans
+        t += [BOS] * (len(sents[-1]) - len(t))
+        tags.append(t)
+    return pd.DataFrame({"sent": sents, "tags": tags})
+
+
 def sample_dyck(vocab_size=1, max_depth=8, min_depth=1):
     vocab = [("(", ")"), ("{", "}")][:vocab_size]
     s = []
@@ -183,9 +255,7 @@ def tag_dyck_pft(sent):
     return tags
 
 
-def make_dyck_pft(
-    vocab_size, dataset_size, min_length=2, max_length=16, seed=0
-):
+def make_dyck_pft(vocab_size, dataset_size, min_length=2, max_length=16, seed=0):
     sents, tags = [], []
     ls = []
     vocab = [c for cs in [("(", ")"), ("{", "}")][:vocab_size] for c in cs]
@@ -422,7 +492,8 @@ def get_conll_ner(
             f"no validation set for {name}, splitting "
             f"{len(train_full)} -> {len(train)}/{len(val)}"
         )
-    f = lambda lst: len(lst) >= min_length and len(lst) < max_length - 1
+
+    def f(lst): return len(lst) >= min_length and len(lst) < max_length - 1
     lst = []
 
     def fmt(w):
@@ -502,7 +573,8 @@ def get_classification_dataset(
     else:
         train, test = data["train"].to_pandas(), data["test"].to_pandas()
         val = test
-    f = lambda lst: len(lst) >= min_length and (
+
+    def f(lst): return len(lst) >= min_length and (
         max_length is None or len(lst) < max_length - 1
     )
     lst = []
@@ -607,6 +679,8 @@ def get_dataset(
         "dyck1": make_dyck_pft,
         "dyck2": make_dyck_pft,
         "sort": make_sort,
+        "add": make_addition,
+        "add_hints": make_addition_with_hints
     }
     if name not in fns:
         raise NotImplementedError(name)
