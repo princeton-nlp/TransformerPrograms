@@ -106,14 +106,14 @@ def set_seed(seed):
 
 
 def run_test(
-    model,                      # 1. TModel (train), 2. TModel (validation), 3. TModel (test), 4. TModel (train), 5. TModel (validation), 6. TModel (test)
-    X,                          # 1. Array (129600), 2. Array (14400), 3. Array (16000), 4. Array (129600), 5. Array (14400), 6. Array (16000)
-    Y,                          # 1. Array (129600), 2. Array (14400), 3. Array (16000), 4. Array (129600), 5. Array (14400), 6. Array (16000)
-    batch_size=256,             # 1. 512, 2. 512, 3. 512, 4. 256, 5. 256, 6. 256
-    x_pad_idx=0,                # 1. 0, 2. 0, 3. 0, 4. 0, 5. 0, 6. 0
-    y_pad_idx=0,                # 1. 0, 2. 0, 3. 0, 4. 0, 5. 0, 6. 0
-    autoregressive=False,       # 1. False, 2. False, 3. False, 4. False, 5. False, 6. False
-    func=torch.argmax,          # 1. argmax, 2. argmax, 3. argmax, 4. argmax, 5. argmax, 6. argmax
+    model,
+    X,
+    Y,
+    batch_size=256,
+    x_pad_idx=0,
+    y_pad_idx=0,
+    autoregressive=False,
+    func=torch.argmax,
 ):
     dataloader = DataLoader(
         list(zip(X, Y)), batch_size=batch_size, shuffle=False
@@ -148,18 +148,18 @@ def run_test(
 
 
 def run_training(
-    model,                      # 1. TModel
-    opt,                        # 1. Adam
-    X_train,                    # 1. Array (129600)
-    Y_train,                    # 1. Array (129600)
-    eval_splits=None,           # 1. [("val", X_val, Y_val), ("test", X_test, Y_test)]
-    batch_size=256,             # 1. 256
-    n_epochs=5,                 # 1. 250
-    temps=None,                 # 1. np.geomspace(args.tau_init, args.tau_end, n_epochs)
-    x_pad_idx=0,                # 1. 0
-    y_pad_idx=0,                # 1. 0
-    autoregressive=False,       # 1. False
-    smooth_temps=True,          # 1. True
+    model,
+    opt,
+    X_train,
+    Y_train,
+    eval_splits=None,
+    batch_size=256,
+    n_epochs=5,
+    temps=None,
+    x_pad_idx=0,
+    y_pad_idx=0,
+    autoregressive=False,
+    smooth_temps=True,
 ):
     train_dataloader = DataLoader(
         list(zip(X_train, Y_train)), batch_size=batch_size, shuffle=True
