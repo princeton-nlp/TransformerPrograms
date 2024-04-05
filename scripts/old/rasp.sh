@@ -11,8 +11,7 @@ N_HEADS_CAT=2
 N_HEADS_NUM=2
 N_CAT_MLPS=1
 N_NUM_MLPS=1
-SEED=1
-
+SEED=0
 
 python ../src/run.py \
      --dataset "${DATASET}" \

@@ -1,20 +1,20 @@
 import collections
 from collections import Counter
 import itertools
-import math
+# import math
 from pathlib import Path
 import re
 
 from black import format_str, FileMode
-import einops
+# import einops
 import numpy as np
 import pandas as pd
-from pprint import pprint, pformat
+# from pprint import pprint, pformat
 import torch
-from torch import nn
-from torch.nn import functional as F
-from torch.optim import Adam
-from torch.utils.data import DataLoader
+# from torch import nn
+# from torch.nn import functional as F
+# from torch.optim import Adam
+# from torch.utils.data import DataLoader
 
 
 def embed_to_code(emb, idx_w, one_hot=True, var_types=None):
