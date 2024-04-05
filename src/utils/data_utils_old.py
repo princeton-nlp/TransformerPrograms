@@ -667,6 +667,7 @@ def get_dataset(
                 val_df = fns[name](
                     vocab_size=vocab_size,
                     dataset_size=int(n * dataset_size * test_size),
+                    min_length = train_min_length,
                     max_length = train_max_length,
                     seed = seed,
                 )
