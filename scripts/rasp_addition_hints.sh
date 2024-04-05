@@ -5,7 +5,6 @@
 python ../src/run.py \
      --dataset "add_hints" \
      --dataset_size 20000 \
-     --min_length 1 \
      --max_length 10 \
      --d_var 10 \
      --n_heads_cat 4 \
