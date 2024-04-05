@@ -1,22 +1,26 @@
 #!/bin/bash 
 
-DATASET="reverse"
+DATASET="hist"
 VOCAB_SIZE=8
-MAX_LENGTH=8
-N_LAYERS=3
-N_HEADS_CAT=4
-N_HEADS_NUM=4
+TRAIN_MIN_LENGTH=1
+TEST_MIN_LENGTH=11
+TRAIN_MAX_LENGTH=10
+TEST_MAX_LENGTH=20
+N_LAYERS=1
+N_HEADS_CAT=2
+N_HEADS_NUM=2
 N_CAT_MLPS=1
 N_NUM_MLPS=1
-
 SEED=0
 
 python ../src/run.py \
      --dataset "${DATASET}" \
      --vocab_size "${VOCAB_SIZE}" \
      --dataset_size 20000 \
-     --min_length 1 \
-     --max_length "${MAX_LENGTH}" \
+     --train_min_length "${TRAIN_MIN_LENGTH}" \
+     --train_max_length "${TRAIN_MAX_LENGTH}" \
+     --test_min_length "${TEST_MIN_LENGTH}" \
+     --test_max_length "${TEST_MAX_LENGTH}" \
      --n_epochs 250 \
      --batch_size 512 \
      --lr "5e-2" \
@@ -26,7 +30,7 @@ python ../src/run.py \
      --tau_end 0.01 \
      --tau_schedule "geomspace" \
      --n_vars_cat 1 \
-     --d_var "${MAX_LENGTH}" \
+     --d_var "${TEST_MAX_LENGTH}" \
      --n_vars_num 1 \
      --n_layers "${N_LAYERS}" \
      --n_heads_cat "${N_HEADS_CAT}" \
@@ -47,3 +51,5 @@ python ../src/run.py \
      --save_code \
      --device "cpu" \
      --output_dir "output/rasp/${DATASET}/vocab${VOCAB_SIZE}maxlen${MAX_LENGTH}/transformer_program/headsc${N_HEADS_CAT}headsn${N_HEADS_NUM}nlayers${N_LAYERS}cmlps${N_CAT_MLPS}nmlps${N_NUM_MLPS}/s${SEED}";
+
+# --dataset "hist" --dataset_size 20000 --seed 1 --d_var 8 --n_heads_cat 2 --n_heads_num 2 --n_cat_mlps 1 --n_num_mlps 1 --n_layers 1 --one_hot_embed --count_only --save --save_code --device "cpu" --output_dir "output/rasp/hist/s1"

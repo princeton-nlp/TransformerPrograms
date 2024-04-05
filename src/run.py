@@ -20,11 +20,16 @@ def parse_args():
     
     # Output
     parser.add_argument("--output_dir", type=str, default="output/scratch") # Output directory
-
+    
     # Data 
     parser.add_argument("--dataset", type=str, default="reverse")               # Dataset name (reverse, hist, double_hist, sort, most_freq, dyck1 & dyck2)
     parser.add_argument("--vocab_size", type=int, default=8)                    # Vocabulary size (8, 1 for dyck1 & 2 for dyck2)
     parser.add_argument("--dataset_size", type=int, default=-1)                 # dataset size (20.000)
+    parser.add_argument("--train_min_length", type=int, default=1)              # Minimum length of the training vocabulary
+    parser.add_argument("--train_max_length", type=int, default=8)              # Maximum length of the training vocabulary (8, or 16 for dyck1 & dyck2)
+    parser.add_argument("--test_min_length", type=int, default=1)               # Minimum length of the test vocabulary
+    parser.add_argument("--test_max_length", type=int, default=8)              # Maximum length of the test vocabulary (8, or 16 for dyck1 & dyck2)
+    
     parser.add_argument("--min_length", type=int, default=1)                    # Minimum length of the vocabulary (default: 1)
     parser.add_argument("--max_length", type=int, default=8)                    # Maximum length of the vocabulary (8, or 16 for dyck1 & dyck2)
     parser.add_argument("--seed", type=int, default=random.randint(0, 100000))  # Seed for random number generator (five random seeds)
@@ -101,14 +106,14 @@ def set_seed(seed):
 
 
 def run_test(
-    model,                      # 1. TModel (train), 2. TModel (validation), 3. TModel (test), 4. TModel (train), 5. TModel (validation), 6. TModel (test)
-    X,                          # 1. Array (129600), 2. Array (14400), 3. Array (16000), 4. Array (129600), 5. Array (14400), 6. Array (16000)
-    Y,                          # 1. Array (129600), 2. Array (14400), 3. Array (16000), 4. Array (129600), 5. Array (14400), 6. Array (16000)
-    batch_size=256,             # 1. 512, 2. 512, 3. 512, 4. 256, 5. 256, 6. 256
-    x_pad_idx=0,                # 1. 0, 2. 0, 3. 0, 4. 0, 5. 0, 6. 0
-    y_pad_idx=0,                # 1. 0, 2. 0, 3. 0, 4. 0, 5. 0, 6. 0
-    autoregressive=False,       # 1. False, 2. False, 3. False, 4. False, 5. False, 6. False
-    func=torch.argmax,          # 1. argmax, 2. argmax, 3. argmax, 4. argmax, 5. argmax, 6. argmax
+    model,
+    X,
+    Y,
+    batch_size=256,
+    x_pad_idx=0,
+    y_pad_idx=0,
+    autoregressive=False,
+    func=torch.argmax,
 ):
     dataloader = DataLoader(
         list(zip(X, Y)), batch_size=batch_size, shuffle=False
@@ -143,18 +148,18 @@ def run_test(
 
 
 def run_training(
-    model,                      # 1. TModel
-    opt,                        # 1. Adam
-    X_train,                    # 1. Array (129600)
-    Y_train,                    # 1. Array (129600)
-    eval_splits=None,           # 1. [("val", X_val, Y_val), ("test", X_test, Y_test)]
-    batch_size=256,             # 1. 256
-    n_epochs=5,                 # 1. 250
-    temps=None,                 # 1. np.geomspace(args.tau_init, args.tau_end, n_epochs)
-    x_pad_idx=0,                # 1. 0
-    y_pad_idx=0,                # 1. 0
-    autoregressive=False,       # 1. False
-    smooth_temps=True,          # 1. True
+    model,
+    opt,
+    X_train,
+    Y_train,
+    eval_splits=None,
+    batch_size=256,
+    n_epochs=5,
+    temps=None,
+    x_pad_idx=0,
+    y_pad_idx=0,
+    autoregressive=False,
+    smooth_temps=True,
 ):
     train_dataloader = DataLoader(
         list(zip(X_train, Y_train)), batch_size=batch_size, shuffle=True
@@ -399,11 +404,11 @@ def run(args):
         name=args.dataset,
         vocab_size=args.vocab_size,
         dataset_size=args.dataset_size,
-        min_length=args.min_length,
-        max_length=args.max_length,
+        train_min_length=args.train_min_length,
+        train_max_length=args.train_max_length,
+        test_min_length=args.test_min_length,
+        test_max_length=args.test_max_length,
         seed=args.seed,
-        do_lower=args.do_lower,
-        replace_numbers=args.replace_numbers,
         get_val=True,
         unique=args.unique,
     ) # Get dataset - data_utils, line 564
