@@ -1,10 +1,14 @@
 #!/bin/bash 
 
-for i in 0 1 2 3 4
+for RUN in 0 1 2 3 4
 do
      python ../src/run.py \
           --dataset "hist" \
           --dataset_size 20000 \
+          --train_min_length 1 \
+          --train_max_length 8 \
+          --test_min_length 1 \
+          --test_max_length 8 \
           --d_var 8 \
           --n_heads_cat 2 \
           --n_heads_num 2 \
@@ -16,7 +20,5 @@ do
           --save \
           --save_code \
           --device "cpu" \
-          --output_dir "output/rasp/hist/s${SEED}";
-done          
-
-# --dataset "hist" --dataset_size 20000 --seed 1 --d_var 8 --n_heads_cat 2 --n_heads_num 2 --n_cat_mlps 1 --n_num_mlps 1 --n_layers 1 --one_hot_embed --count_only --save --save_code --device "cpu" --output_dir "output/rasp/hist/s1"
+          --output_dir "output/rasp/hist/r${RUN}";
+done

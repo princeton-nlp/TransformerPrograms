@@ -28,10 +28,7 @@ def parse_args():
     parser.add_argument("--train_min_length", type=int, default=1)              # Minimum length of the training vocabulary
     parser.add_argument("--train_max_length", type=int, default=8)              # Maximum length of the training vocabulary (8, or 16 for dyck1 & dyck2)
     parser.add_argument("--test_min_length", type=int, default=1)               # Minimum length of the test vocabulary
-    parser.add_argument("--test_max_length", type=int, default=8)              # Maximum length of the test vocabulary (8, or 16 for dyck1 & dyck2)
-    
-    parser.add_argument("--min_length", type=int, default=1)                    # Minimum length of the vocabulary (default: 1)
-    parser.add_argument("--max_length", type=int, default=8)                    # Maximum length of the vocabulary (8, or 16 for dyck1 & dyck2)
+    parser.add_argument("--test_max_length", type=int, default=8)               # Maximum length of the test vocabulary (8, or 16 for dyck1 & dyck2)
     parser.add_argument("--seed", type=int, default=random.randint(0, 100000))  # Seed for random number generator (five random seeds)
     parser.add_argument("--do_lower", type=int, default=0)                      # Lowercase the dataset (default: 0)
     parser.add_argument("--unique", type=int, default=1)                        # Unique dataset (default: 1)
@@ -293,7 +290,7 @@ def run_program(
         n_num_mlps=args.n_num_mlps,
         mlp_vars_in=args.mlp_vars_in,
         n_layers=args.n_layers,
-        n_ctx=X_train.shape[1],
+        n_ctx=X_test.shape[1],
         sample_fn=gumbel_soft,
         init_emb=init_emb,
         attention_type=args.attention_type,
