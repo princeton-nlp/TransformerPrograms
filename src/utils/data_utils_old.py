@@ -637,39 +637,16 @@ def get_dataset(
     name,
     vocab_size,
     dataset_size=None,
-    min_length=4,
-    max_length=16,
+    train_min_length=4,
+    train_max_length=16,
+    test_min_length=4,
+    test_max_length=16,
     seed=0,
     unk=False,
     test_size=0.1,
-    do_lower=True,
     get_val=True,
-    replace_numbers=False,
     unique=False,
 ):
-    if name.startswith("conll"):
-        return get_conll_ner(
-            name,
-            vocab_size,
-            dataset_size=dataset_size,
-            min_length=min_length,
-            max_length=max_length,
-            seed=seed,
-            do_lower=do_lower,
-            get_val=get_val,
-            replace_numbers=replace_numbers,
-        )
-    if name in ("rotten_tomatoes", "ag_news", "trec", "subj"):
-        return get_classification_dataset(
-            name,
-            vocab_size,
-            dataset_size=dataset_size,
-            min_length=min_length,
-            max_length=max_length,
-            seed=seed,
-            do_lower=do_lower,
-            get_val=get_val,
-        )
     fns = {
         "induction": make_induction,
         "reverse": make_reverse,
@@ -680,38 +657,77 @@ def get_dataset(
         "dyck2": make_dyck_pft,
         "sort": make_sort,
         "add": make_addition,
-        "add_hints": make_addition_with_hints
+        "add_hints": make_addition_with_hints,
     }
     if name not in fns:
         raise NotImplementedError(name)
     if unique:
         for n in (2, 3, 4, 5):
+            if get_val:
+                val_df = fns[name](
+                    vocab_size=vocab_size,
+                    dataset_size=int(n * dataset_size * test_size),
+                    min_length = train_min_length,
+                    max_length = train_max_length,
+                    seed = seed,
+                )
+                train_file_size = int(n * dataset_size * (1 - test_size))
+            else:
+                val_df = None
+                train_file_size = int(dataset_size * (1 - test_size))
             df = fns[name](
                 vocab_size=vocab_size,
-                dataset_size=n * dataset_size,
-                min_length=min_length,
-                max_length=max_length,
+                dataset_size= train_file_size,
+                min_length=train_min_length,
+                max_length=train_max_length,
+                seed=seed,
+            )
+            df_test = fns[name](
+                vocab_size = vocab_size,
+                dataset_size = int(dataset_size * test_size * n),
+                min_length=test_min_length,
+                max_length=test_max_length,
                 seed=seed,
             )
             df = get_unique(df)
+            df_test = get_unique(df_test)
+            val_df = get_unique(val_df)
             if len(df) >= dataset_size:
                 df = df.iloc[:dataset_size]
                 break
+            if len(df_test) >= dataset_size:
+                df_test = df_test.iloc[:dataset_size]
+                break        
     else:
+        if get_val:
+                val_df = fns[name](
+                    vocab_size=vocab_size,
+                    dataset_size=int(n * dataset_size * test_size),
+                    min_length = train_min_length,
+                    max_length = train_max_length,
+                    seed = seed,
+                )
+                train_file_size = int(n * dataset_size * (1 - test_size))
+        else:
+            val_df = None
+            train_file_size = int(dataset_size * (1 - test_size))
         df = fns[name](
             vocab_size=vocab_size,
-            dataset_size=dataset_size,
-            min_length=min_length,
-            max_length=max_length,
+            dataset_size= train_file_size,
+            min_length=train_min_length,
+            max_length=train_max_length,
             seed=seed,
         )
-    train, test = train_test_split(df, test_size=test_size, random_state=seed)
-    if get_val:
-        train, val = train_test_split(
-            train, test_size=test_size, random_state=seed
+        df_test = fns[name](
+            vocab_size=vocab_size,
+            dataset_size=int(dataset_size * test_size),
+            min_length=test_min_length,
+            test_max_length=test_max_length,
+            seed=seed,
         )
-        return train, test, val, *prepare_dataset(train, test, val=val, unk=unk)
-    return train, test, *prepare_dataset(train, test, unk=unk)
+    if get_val:
+        return df, df_test, val_df, *prepare_dataset(df, df_test, val=val_df, unk=unk)
+    return df, df_test, *prepare_dataset(df, df_test, unk=unk)
 
 
 class LocalGlove:

@@ -691,6 +691,7 @@ def get_dataset(
             )
             df = get_unique(df)
             df_test = get_unique(df_test)
+            val_df = get_unique(val_df)
             if len(df) >= dataset_size:
                 df = df.iloc[:dataset_size]
                 break
