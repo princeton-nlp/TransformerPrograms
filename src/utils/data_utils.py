@@ -9,12 +9,12 @@ import re
 import string
 
 import datasets
-import gensim.downloader
+# import gensim.downloader
 from nltk.tokenize import word_tokenize
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.random_projection import GaussianRandomProjection
+# from sklearn.random_projection import GaussianRandomProjection
 # from sklearn.preprocessing import normalize
 # import torch
 # from torch import nn
@@ -22,52 +22,71 @@ from sklearn.random_projection import GaussianRandomProjection
 
 from utils import logging
 
-logger = logging.get_logger(__name__)
-
-
 BOS = "<s>"
 EOS = "</s>"
 SEP = "<sep>"
 PAD = "<pad>"
 UNK = "<unk>"
 
+alphabet = list(string.ascii_lowercase)
 
-def make_induction(
-    vocab_size, dataset_size, min_length=4, max_length=16, seed=0, unique=True
-):
-    size = (vocab_size - 2) // 2
-    letters = np.array(list(string.ascii_lowercase[:size]))
-    numbers = np.array([str(i) for i in range(size)])
-    sents, tags = [], []
-    seen = set()
-    tries = 0
+logger = logging.get_logger(__name__)
+
+def make_addition(dataset_size, vocab_size=10, min_length=1, max_length=5, seed=0):
+    vocab = np.array([str(i) for i in range(vocab_size)]) # 0 to vocab_size-1
+    sents, tags = [], [] # input sentence, output string
     np.random.seed(seed)
-    while len(sents) < dataset_size:
-        # for _ in range(dataset_size):
-        l = np.random.randint(min_length // 2, (max_length // 2) + 1)
-        cton = np.random.randint(0, len(numbers), size=len(letters))
-        cs = np.random.randint(0, size, size=l)
-        s = [BOS]
-        t = [PAD]
-        for c in cs:
-            s += [letters[c], numbers[cton[c]]]
-            t += [UNK if letters[c] not in s[:-2] else numbers[cton[c]], PAD]
-        if np.random.randint(0, 2):
-            s = [BOS, np.random.choice(numbers)] + s[1:]
-            t = [PAD] + t
-        else:
-            c = np.random.randint(0, size)
-            s += [letters[c]]
-            t += [UNK if letters[c] not in s[:-2] else numbers[cton[c]]]
-        h = "".join(s)
-        if h not in seen or (not unique):
-            sents.append(s)
-            tags.append(t)
-            seen.add(h)
-        else:
-            tries += 1
-            if tries > dataset_size * 2:
-                break
+
+    for _ in range(dataset_size):
+
+        l1 = np.random.randint(1, max_length//2+1)
+        l2 = np.random.randint(max(1, min_length-l1), max_length//2+1)
+        sent = np.random.choice(vocab, size=l1+l2+1, replace=True).tolist()
+        sent[l1] = "+"
+        sent_str = "".join(sent)
+        sents.append([BOS] + sent)
+
+        t = [PAD] + str(int(sent_str[:l1]) + int(sent_str[l1+1:])).split()
+        t += [BOS] * (len(sents[-1]) - len(t))
+        tags.append(t)
+    return pd.DataFrame({"sent": sents, "tags": tags})
+
+
+def make_addition_with_hints(dataset_size, vocab_size=10, min_length=1, max_length=5, seed=0):
+    vocab = np.array([str(i) for i in range(vocab_size)])
+    sents, tags = [], [] # input sentence, output string
+    np.random.seed(seed)
+
+    for _ in range(dataset_size):
+
+        l1 = np.random.randint(1, max_length//2+1)
+        l2 = np.random.randint(max(1, min_length-l1), max_length//2+1)
+        sent = np.random.choice(vocab, size=l1+l2, replace=True).tolist()
+        sent.insert(l1, "+")
+        
+        hint_index = 0
+        sent_hint = []
+        for item in sent:
+            if item.isdigit():
+                sent_hint.append(alphabet[hint_index])
+                hint_index = (hint_index + 1) % len(alphabet)
+            else:
+                hint_index = 0
+            sent_hint.append(item)
+        
+        sents.append([BOS] + sent_hint)
+
+        sent_str = "".join(sent)
+        ans = list(str(int(sent_str[:l1]) + int(sent_str[l1+1:])))
+        ans_hint = []
+        hint_index = 0
+        for item in ans:
+            ans_hint.append(alphabet[hint_index])
+            hint_index = (hint_index + 1) % len(alphabet)
+            ans_hint.append(item)
+        t = [PAD] + ans_hint
+        t += [BOS] * (len(sents[-1]) - len(t))
+        tags.append(t)
     return pd.DataFrame({"sent": sents, "tags": tags})
 
 
@@ -146,78 +165,6 @@ def make_most_freq(
     return pd.DataFrame({"sent": sents, "tags": tags})
 
 
-def make_addition(vocab_size, dataset_size, min_length=1, max_length=5, seed=0):
-    """make the dataset for training the addition task"""
-    # vocab = all numbers we want to allow being added together
-    vocab = np.array([str(i) for i in range(10)])
-
-    # sents = input sentence
-    # tags  = output string
-    sents, tags = [], []
-    np.random.seed(seed)
-
-    for _ in range(dataset_size):
-
-        l1 = np.random.randint(1, max_length-2)  # length first number
-        l2 = np.random.randint(max(1, min_length-l1), max_length-l1-1)  # length second number
-        sent = np.random.choice(vocab, size=l1+l2+1, replace=True).tolist()
-        # l1=2 l2=3 ->  43+567
-        sent[l1] = "+"
-        sent_str = "".join(sent)
-        sents.append([BOS] + sent)
-
-        t = [PAD] + str(int(sent_str[:l1]) + int(sent_str[l1+1:])).split()
-        t += [BOS] * (len(sents[-1]) - len(t))
-        tags.append(t)
-    return pd.DataFrame({"sent": sents, "tags": tags})
-
-
-def make_addition_with_hints(vocab_size, dataset_size, min_length=1, max_length=5, seed=0):
-    """make the dataset for training the addition task"""
-    # vocab = all numbers we want to allow being added together
-    vocab = np.array([str(i) for i in range(10)])
-
-    # sents = input sentence
-    # tags  = output string
-    sents, tags = [], []
-    np.random.seed(seed)
-
-    for _ in range(dataset_size):
-
-        max_length_nums = (max_length-3)//2  # without start of string and plus, divide by two for index hints
-        l1 = np.random.randint(1, max_length_nums-1)  # length first number, leave at least 1 for len other number
-        l2 = np.random.randint(max(1, min_length-l1), max_length_nums-l1)  # length second number
-        num1 = np.random.choice(vocab, size=l1, replace=True).tolist()
-        num2 = np.random.choice(vocab, size=l2, replace=True).tolist()
-
-        ans = list(str(int("".join(num1)) + int("".join(num2))))
-        l_ans = len(ans)
-        num1_pad = ["0"] * (l_ans - l1) + num1
-        num2_pad = ["0"] * (l_ans - l2) + num2
-
-        alpha = [str(-100 - i) for i in range(l_ans)]
-
-        new_num1, new_num2, new_ans = [], [], []
-
-        for i in range(l_ans):
-            new_num1.append(alpha[i])
-            new_num1.append(num1_pad[i])
-
-            new_num2.append(alpha[i])
-            new_num2.append(num2_pad[i])
-
-            new_ans.append(alpha[i])
-            new_ans.append(ans[i])
-
-        sent = new_num1 + ["+"] + new_num2
-        sents.append([BOS] + sent)
-
-        t = [PAD] + new_ans
-        t += [BOS] * (len(sents[-1]) - len(t))
-        tags.append(t)
-    return pd.DataFrame({"sent": sents, "tags": tags})
-
-
 def sample_dyck(vocab_size=1, max_depth=8, min_depth=1):
     vocab = [("(", ")"), ("{", "}")][:vocab_size]
     s = []
@@ -255,7 +202,9 @@ def tag_dyck_pft(sent):
     return tags
 
 
-def make_dyck_pft(vocab_size, dataset_size, min_length=2, max_length=16, seed=0):
+def make_dyck_pft(
+    vocab_size, dataset_size, min_length=2, max_length=16, seed=0
+):
     sents, tags = [], []
     ls = []
     vocab = [c for cs in [("(", ")"), ("{", "}")][:vocab_size] for c in cs]
@@ -352,275 +301,6 @@ def prepare_dataset(
     )
 
 
-def load_conll(fn, cols=["ignore", "word", "ignore", "pos"], sep="\t"):
-    with open(fn, "r") as f:
-        text = f.read()
-    chunks = text.split("\n\n")
-    lst = []
-    for chunk in chunks:
-        lines = [l.strip() for l in chunk.split("\n")]
-        sent = {k: [] for k in cols if k != "ignore"}
-        for line in lines:
-            parts = line.split(sep)
-            for c, s in zip(cols, parts):
-                if c != "ignore":
-                    sent[c].append(s)
-        lst.append(sent)
-    return lst
-
-
-def get_conll_ner(
-    name,
-    vocab_size,
-    dataset_size=None,
-    min_length=1,
-    max_length=64,
-    seed=0,
-    unk=True,
-    do_lower=False,
-    replace_numbers=False,
-    get_val=True,
-):
-    if name == "conll_pos":
-        data = datasets.load_dataset("conll2003")
-        t_idx = {
-            '"': 0,
-            "''": 1,
-            "#": 2,
-            "$": 3,
-            "(": 4,
-            ")": 5,
-            ",": 6,
-            ".": 7,
-            ":": 8,
-            "``": 9,
-            "CC": 10,
-            "CD": 11,
-            "DT": 12,
-            "EX": 13,
-            "FW": 14,
-            "IN": 15,
-            "JJ": 16,
-            "JJR": 17,
-            "JJS": 18,
-            "LS": 19,
-            "MD": 20,
-            "NN": 21,
-            "NNP": 22,
-            "NNPS": 23,
-            "NNS": 24,
-            "NN|SYM": 25,
-            "PDT": 26,
-            "POS": 27,
-            "PRP": 28,
-            "PRP$": 29,
-            "RB": 30,
-            "RBR": 31,
-            "RBS": 32,
-            "RP": 33,
-            "SYM": 34,
-            "TO": 35,
-            "UH": 36,
-            "VB": 37,
-            "VBD": 38,
-            "VBG": 39,
-            "VBN": 40,
-            "VBP": 41,
-            "VBZ": 42,
-            "WDT": 43,
-            "WP": 44,
-            "WP$": 45,
-            "WRB": 46,
-        }
-        tag_col = "pos_tags"
-    elif name == "conll_chunk":
-        data = datasets.load_dataset("conll2000")
-        t_idx = {
-            "O": 0,
-            "B-ADJP": 1,
-            "I-ADJP": 2,
-            "B-ADVP": 3,
-            "I-ADVP": 4,
-            "B-CONJP": 5,
-            "I-CONJP": 6,
-            "B-INTJ": 7,
-            "I-INTJ": 8,
-            "B-LST": 9,
-            "I-LST": 10,
-            "B-NP": 11,
-            "I-NP": 12,
-            "B-PP": 13,
-            "I-PP": 14,
-            "B-PRT": 15,
-            "I-PRT": 16,
-            "B-SBAR": 17,
-            "I-SBAR": 18,
-            "B-UCP": 19,
-            "I-UCP": 20,
-            "B-VP": 21,
-            "I-VP": 22,
-        }
-        tag_col = "chunk_tags"
-    else:
-        data = datasets.load_dataset("conll2003")
-        t_idx = {
-            "O": 0,
-            "B-PER": 1,
-            "I-PER": 2,
-            "B-ORG": 3,
-            "I-ORG": 4,
-            "B-LOC": 5,
-            "I-LOC": 6,
-            "B-MISC": 7,
-            "I-MISC": 8,
-        }
-        tag_col = "ner_tags"
-
-    idx_t = {v: k for k, v in t_idx.items()}
-    idx_t = np.array([idx_t[i] for i in range(len(idx_t))])
-    if "validation" in data:
-        train, test, val = (
-            data["train"].to_pandas(),
-            data["test"].to_pandas(),
-            data["validation"].to_pandas(),
-        )
-    else:
-        train_full, test = data["train"].to_pandas(), data["test"].to_pandas()
-        np.random.seed(0)
-        train, val = train_test_split(train_full, test_size=0.1, random_state=0)
-        logger.info(
-            f"no validation set for {name}, splitting "
-            f"{len(train_full)} -> {len(train)}/{len(val)}"
-        )
-
-    def f(lst): return len(lst) >= min_length and len(lst) < max_length - 1
-    lst = []
-
-    def fmt(w):
-        s = w
-        if do_lower:
-            s = s.lower()
-        if replace_numbers:
-            s = re.sub(r"[0-9]+", "@", s)
-        return s
-
-    for d in (train, test, val):
-        sents = [
-            [BOS] + [fmt(w) for w in wds] + [EOS]
-            for wds in d["tokens"]
-            if f(wds)
-        ]
-        tags = [
-            [PAD] + idx_t[ts].tolist() + [PAD] for ts in d[tag_col] if f(ts)
-        ]
-        lst.append(pd.DataFrame({"sent": sents, "tags": tags}))
-    logger.info(f"kept {len(lst[0])}/{len(train)} training examples")
-    train, test, val = lst
-    if (dataset_size or 0) > 0 and dataset_size < len(train):
-        random.seed(seed)
-        train = random.sample(train, dataset_size)
-    if get_val:
-        return (
-            train,
-            test,
-            val,
-            *prepare_dataset(
-                train,
-                test,
-                val=val,
-                vocab_size=vocab_size,
-                unk=unk,
-            ),
-        )
-    return (
-        train,
-        test,
-        *prepare_dataset(train, test, vocab_size=vocab_size, unk=unk),
-    )
-
-
-def get_classification_dataset(
-    name,
-    vocab_size,
-    dataset_size=None,
-    min_length=4,
-    max_length=32,
-    seed=0,
-    unk=True,
-    do_lower=False,
-    get_val=True,
-):
-    if name == "sst2":
-        data = datasets.load_dataset("glue", name)
-    elif name == "subj":
-        data = datasets.load_dataset("SetFit/subj")
-    else:
-        data = datasets.load_dataset(name)
-    if "validation" in data:
-        train, val, test = (
-            data["train"].to_pandas(),
-            data["validation"].to_pandas(),
-            data["test"].to_pandas(),
-        )
-    elif get_val:
-        train_full, test = data["train"].to_pandas(), data["test"].to_pandas()
-        np.random.seed(0)
-        train, val = train_test_split(train_full, test_size=0.1, random_state=0)
-        logger.info(
-            f"no validation set for {name}, splitting "
-            f"{len(train_full)} -> {len(train)}/{len(val)}"
-        )
-    else:
-        train, test = data["train"].to_pandas(), data["test"].to_pandas()
-        val = test
-
-    def f(lst): return len(lst) >= min_length and (
-        max_length is None or len(lst) < max_length - 1
-    )
-    lst = []
-    col = "text" if "text" in train.columns else "sentence"
-    label_col = "label" if "label" in train.columns else "coarse_label"
-    for d in (train, val, test):
-        sents, tags = [], []
-        for s, _y in zip(d[col], d[label_col]):
-            if name == "ag_news":
-                y = ["World", "Sports", "Business", "Sci/Tech"][_y]
-            elif name == "trec":
-                y = ["ABBR", "ENTY", "DESC", "HUM", "LOC", "NUM"][_y]
-            elif name == "rotten_tomatoes":
-                y = ["Negative", "Positive"][_y]
-            elif name == "subj":
-                y = ["Objective", "Subjective"][_y]
-            else:
-                y = str(_y)
-            wds = word_tokenize(s)
-            if f(wds):
-                sents.append(
-                    [BOS] + [w.lower() if do_lower else w for w in wds] + [EOS]
-                )
-                tags.append([y] + [PAD] * (len(sents[-1]) - 1))
-        lst.append(pd.DataFrame({"sent": sents, "tags": tags}))
-    logger.info(f"{len(lst[0])}/{len(train)} training examples")
-    train, val, test = lst
-    if (dataset_size or 0) > 0 and dataset_size < len(train):
-        random.seed(seed)
-        train = random.sample(train, dataset_size)
-    if get_val:
-        return (
-            train,
-            test,
-            val,
-            *prepare_dataset(
-                train, test, val=val, vocab_size=vocab_size, unk=unk
-            ),
-        )
-    return (
-        train,
-        test,
-        *prepare_dataset(train, test, vocab_size=vocab_size, unk=unk),
-    )
-
-
 def get_unique(df):
     seen = set()
     sent, tags = [], []
@@ -636,7 +316,7 @@ def get_unique(df):
 def get_dataset(
     name,
     vocab_size,
-    dataset_size=None,
+    dataset_size,
     train_min_length=4,
     train_max_length=16,
     test_min_length=4,
@@ -644,11 +324,8 @@ def get_dataset(
     seed=0,
     unk=False,
     test_size=0.1,
-    get_val=True,
-    unique=False,
 ):
     fns = {
-        "induction": make_induction,
         "reverse": make_reverse,
         "hist": make_hist,
         "double_hist": make_double_hist,
@@ -656,124 +333,44 @@ def get_dataset(
         "dyck1": make_dyck_pft,
         "dyck2": make_dyck_pft,
         "sort": make_sort,
-        "add": make_addition,
-        "add_hints": make_addition_with_hints
+        "addition": make_addition,
+        "addition_hints": make_addition_with_hints,
     }
     if name not in fns:
         raise NotImplementedError(name)
-    if unique:
-        for n in (2, 3, 4, 5):
-            if get_val:
-                val_df = fns[name](
-                    vocab_size=vocab_size,
-                    dataset_size=int(n * dataset_size * test_size),
-                    min_length = train_min_length,
-                    max_length = train_max_length,
-                    seed = seed,
-                )
-                train_file_size = int(n * dataset_size * (1 - test_size))
-            else:
-                val_df = None
-                train_file_size = int(dataset_size * (1 - test_size))
-            df = fns[name](
-                vocab_size=vocab_size,
-                dataset_size= train_file_size,
-                min_length=train_min_length,
-                max_length=train_max_length,
-                seed=seed,
-            )
-            df_test = fns[name](
-                vocab_size = vocab_size,
-                dataset_size = int(dataset_size * test_size * n),
-                min_length=test_min_length,
-                max_length=test_max_length,
-                seed=seed,
-            )
-            df = get_unique(df)
-            df_test = get_unique(df_test)
-            val_df = get_unique(val_df)
-            if len(df) >= dataset_size:
-                df = df.iloc[:dataset_size]
-                break
-            if len(df_test) >= dataset_size:
-                df_test = df_test.iloc[:dataset_size]
-                break        
-    else:
-        if get_val:
-                val_df = fns[name](
-                    vocab_size=vocab_size,
-                    dataset_size=int(n * dataset_size * test_size),
-                    min_length = train_min_length,
-                    max_length = train_max_length,
-                    seed = seed,
-                )
-                train_file_size = int(n * dataset_size * (1 - test_size))
-        else:
-            val_df = None
-            train_file_size = int(dataset_size * (1 - test_size))
-        df = fns[name](
+    
+    length_gen_flag = False if train_min_length == test_min_length and train_max_length == test_max_length else True
+    print(f"length_gen_flag: {length_gen_flag}")
+    
+    for n in (2, 3, 4, 5):
+        train_df = fns[name](
             vocab_size=vocab_size,
-            dataset_size= train_file_size,
+            dataset_size=n * dataset_size,
             min_length=train_min_length,
             max_length=train_max_length,
             seed=seed,
         )
-        df_test = fns[name](
-            vocab_size=vocab_size,
-            dataset_size=int(dataset_size * test_size),
-            min_length=test_min_length,
-            test_max_length=test_max_length,
-            seed=seed,
-        )
-    if get_val:
-        return df, df_test, val_df, *prepare_dataset(df, df_test, val=val_df, unk=unk)
-    return df, df_test, *prepare_dataset(df, df_test, unk=unk)
-
-
-class LocalGlove:
-    def __init__(self, fn, idx_w=None):
-        rows = []
-        self.key_to_index = {}
-        need = set(idx_w) if idx_w is not None else None
-        with open(fn, "r") as f:
-            for line in f:
-                i = line.find(" ")
-                w = line[:i]
-                if (not need) or w in need:
-                    parts = line.strip().split(" ")
-                    self.key_to_index[parts[0]] = len(rows)
-                    rows.append(np.array([float(v) for v in parts[1:]]))
-        self.vectors = np.stack(rows, 0)
-        logger.info(f"loaded {len(self.vectors)} rows from {fn}")
-
-
-def get_glove_embeddings(
-    idx_w,
-    name="glove-wiki-gigaword-100",
-    dim=None,
-):
-    if name.startswith("data"):
-        glove_vectors = LocalGlove(name, idx_w)
-    else:
-        glove_vectors = gensim.downloader.load(name)
-    lst = []
-    V = glove_vectors.vectors
-    missing = []
-    for w_ in idx_w:
-        if name.startswith("data"):
-            w = w_
-        else:
-            w = w_.lower()
-        if w in glove_vectors.key_to_index:
-            lst.append(V[glove_vectors.key_to_index[w]])
-        else:
-            lst.append(np.random.randn(V.shape[1]))
-            missing.append(w)
-    logger.info(f"found {len(lst)-len(missing)}/{len(lst)} glove embeddings")
-    logger.info(f"missing {missing[:10] + ['...']}")
-    emb = np.stack(lst, 0)
-    if dim is not None and dim != emb.shape[-1]:
-        emb = GaussianRandomProjection(
-            n_components=dim, random_state=0
-        ).fit_transform(emb)
-    return emb
+        
+        if length_gen_flag:
+            test_df = fns[name](
+                vocab_size=vocab_size,
+                dataset_size=n * dataset_size,
+                min_length=test_min_length,
+                max_length=test_max_length,
+                seed=seed+random.randint(0, 10000),
+            )
+            
+            test_df = get_unique(test_df)
+            temp_test_size = int(dataset_size * test_size)
+            if len(test_df) >= temp_test_size:
+                test_df = test_df.iloc[:temp_test_size]
+        
+        train_df = get_unique(train_df)
+        if len(train_df) >= dataset_size:
+            train_df = train_df.iloc[:dataset_size]    
+            break
+    
+    if not length_gen_flag:
+        train_df, test_df = train_test_split(train_df, test_size=test_size, random_state=seed)
+    train_df, val_df = train_test_split(train_df, test_size=test_size, random_state=seed)
+    return train_df, test_df, val_df, *prepare_dataset(train_df, test_df, val=val_df, unk=unk)
