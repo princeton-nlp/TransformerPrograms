@@ -98,7 +98,6 @@ def set_seed(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-    torch.mps.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
 
 
@@ -382,7 +381,6 @@ def run_program(
 
 def run(args):
     set_seed(args.seed) # Set seed - Line X
-    
     (
         train,
         test,
@@ -406,8 +404,6 @@ def run(args):
         test_min_length=args.test_min_length,
         test_max_length=args.test_max_length,
         seed=args.seed,
-        get_val=True,
-        unique=args.unique,
     ) # Get dataset - data_utils, line 564
     
     # Log dataset information
