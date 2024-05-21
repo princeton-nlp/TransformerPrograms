@@ -119,10 +119,12 @@ If you have any questions about the code or paper, please email Dan (dfriedman@c
 # Citation
 
 ```bibtex
-@article{friedman2023learning,
-    title={Learning {T}ransformer {P}rograms},
-    author={Friedman, Dan and Wettig, Alexander and Chen, Danqi},
-    journal={arXiv preprint},
-    year={2023}
+@inproceedings{
+    friedman2023learning,
+    title={Learning Transformer Programs},
+    author={Dan Friedman and Alexander Wettig and Danqi Chen},
+    booktitle={Thirty-seventh Conference on Neural Information Processing Systems},
+    year={2023},
+    url={https://openreview.net/forum?id=Pe9WxkN8Ff}
 }
 ```
